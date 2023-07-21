@@ -47,34 +47,34 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 SECONDARY_FLASH += \
-CH32V203C8T6_RTT_Nano.hex \
+JT-DT-YD1C01_RTT_Nano.hex \
 
 SECONDARY_LIST += \
-CH32V203C8T6_RTT_Nano.lst \
+JT-DT-YD1C01_RTT_Nano.lst \
 
 SECONDARY_SIZE += \
-CH32V203C8T6_RTT_Nano.siz \
+JT-DT-YD1C01_RTT_Nano.siz \
 
 
 # 所有目标
-all: CH32V203C8T6_RTT_Nano.elf secondary-outputs
+all: JT-DT-YD1C01_RTT_Nano.elf secondary-outputs
 
 # 工具调用
-CH32V203C8T6_RTT_Nano.elf: $(OBJS) $(USER_OBJS)
-	@	@	riscv-none-embed-gcc -march=rv32imacxw -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized  -g -T "C:\Users\yzy\Desktop\CH32V203C8T6_RTT_Nano\Ld\Link.ld" -nostartfiles -Xlinker --gc-sections -Xlinker --print-memory-usage -Wl,-Map,"CH32V203C8T6_RTT_Nano.map" --specs=nano.specs --specs=nosys.specs -o "CH32V203C8T6_RTT_Nano.elf" $(OBJS) $(USER_OBJS) $(LIBS) -lprintf
+JT-DT-YD1C01_RTT_Nano.elf: $(OBJS) $(USER_OBJS)
+	@	@	riscv-none-embed-gcc -march=rv32imacxw -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized  -g -T "E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\Ld\Link.ld" -nostartfiles -Xlinker --gc-sections -Xlinker --print-memory-usage -Wl,-Map,"JT-DT-YD1C01_RTT_Nano.map" --specs=nano.specs --specs=nosys.specs -o "JT-DT-YD1C01_RTT_Nano.elf" $(OBJS) $(USER_OBJS) $(LIBS) -lprintf
 	@	@
-CH32V203C8T6_RTT_Nano.hex: CH32V203C8T6_RTT_Nano.elf
-	@	riscv-none-embed-objcopy -O ihex "CH32V203C8T6_RTT_Nano.elf"  "CH32V203C8T6_RTT_Nano.hex"
+JT-DT-YD1C01_RTT_Nano.hex: JT-DT-YD1C01_RTT_Nano.elf
+	@	riscv-none-embed-objcopy -O ihex "JT-DT-YD1C01_RTT_Nano.elf"  "JT-DT-YD1C01_RTT_Nano.hex"
 	@	@
-CH32V203C8T6_RTT_Nano.lst: CH32V203C8T6_RTT_Nano.elf
-	@	riscv-none-embed-objdump --all-headers --demangle --disassemble -M xw "CH32V203C8T6_RTT_Nano.elf" > "CH32V203C8T6_RTT_Nano.lst"
+JT-DT-YD1C01_RTT_Nano.lst: JT-DT-YD1C01_RTT_Nano.elf
+	@	riscv-none-embed-objdump --all-headers --demangle --disassemble -M xw "JT-DT-YD1C01_RTT_Nano.elf" > "JT-DT-YD1C01_RTT_Nano.lst"
 	@	@
-CH32V203C8T6_RTT_Nano.siz: CH32V203C8T6_RTT_Nano.elf
-	@	riscv-none-embed-size --format=berkeley "CH32V203C8T6_RTT_Nano.elf"
+JT-DT-YD1C01_RTT_Nano.siz: JT-DT-YD1C01_RTT_Nano.elf
+	@	riscv-none-embed-size --format=berkeley "JT-DT-YD1C01_RTT_Nano.elf"
 	@	@
 # 其他目标
 clean:
-	-$(RM) $(ASM_UPPER_DEPS)$(OBJS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_DEPS)$(S_UPPER_DEPS)$(C_DEPS) CH32V203C8T6_RTT_Nano.elf
+	-$(RM) $(ASM_UPPER_DEPS)$(OBJS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_DEPS)$(S_UPPER_DEPS)$(C_DEPS) JT-DT-YD1C01_RTT_Nano.elf
 	-@
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
 

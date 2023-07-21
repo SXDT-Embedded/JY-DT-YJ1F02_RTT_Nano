@@ -2721,7 +2721,7 @@ END GROUP
                 0x0000000020005000                . = (. + __stack_size)
  *fill*         0x0000000020004800      0x800 
                 0x0000000020005000                PROVIDE (_eusrstack = .)
-OUTPUT(CH32V203C8T6_RTT_Nano.elf elf32-littleriscv)
+OUTPUT(JT-DT-YD1C01_RTT_Nano.elf elf32-littleriscv)
 
 .debug_info     0x0000000000000000    0x1ffb8
  .debug_info    0x0000000000000000      0x4eb ./rtthread/src/clock.o
