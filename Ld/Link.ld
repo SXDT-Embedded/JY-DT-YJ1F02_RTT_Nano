@@ -1,6 +1,6 @@
 ENTRY( _start )
 
-__stack_size = 2048;
+__stack_size = 2 * 1024;
 
 PROVIDE( _stack_size = __stack_size );
 
@@ -8,9 +8,9 @@ PROVIDE( _stack_size = __stack_size );
 MEMORY
 {
 	FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 64K
+	/* FLASH1 (rx) : ORIGIN = 0x00010000, LENGTH = 160K */
 	RAM (xrw) : ORIGIN = 0x20000000, LENGTH = 20K
 }
-
 
 SECTIONS
 {

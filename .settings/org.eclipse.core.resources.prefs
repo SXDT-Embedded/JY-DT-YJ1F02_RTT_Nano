@@ -1,3 +1,6 @@
 eclipse.preferences.version=1
+encoding//common/letter-shell/extensions/log/log.h=UTF-8
 encoding//drivers/drv_gpio.c=UTF-8
 encoding//rtthread/board.c=UTF-8
+encoding//rtthread/board.h=UTF-8
+encoding//rtthread/rtconfig.h=UTF-8

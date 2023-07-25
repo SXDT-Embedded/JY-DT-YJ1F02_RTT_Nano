@@ -17,10 +17,10 @@ RM := rm -rf
 -include rtthread/components/device/subdir.mk
 -include rtthread/subdir.mk
 -include drivers/subdir.mk
+-include bsp/src/subdir.mk
 -include User/subdir.mk
 -include Startup/subdir.mk
 -include Peripheral/src/subdir.mk
--include Debug/subdir.mk
 -include Core/subdir.mk
 -include subdir.mk
 -include objects.mk

@@ -24,10 +24,10 @@ C_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 Core \
-Debug \
 Peripheral/src \
 Startup \
 User \
+bsp/src \
 drivers \
 rtthread \
 rtthread/components/device \

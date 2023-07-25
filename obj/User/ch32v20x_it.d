@@ -1,5 +1,4 @@
 User/ch32v20x_it.o: ../User/ch32v20x_it.c ../User/ch32v20x_it.h \
- E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\Debug/debug.h \
  E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\Peripheral\inc/ch32v20x.h \
  E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\Core/core_riscv.h \
  E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\User/system_ch32v20x.h \
@@ -36,8 +35,6 @@ User/ch32v20x_it.o: ../User/ch32v20x_it.c ../User/ch32v20x_it.h \
  E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\rtthread\components\finsh/finsh_config.h
 
 ../User/ch32v20x_it.h:
-
-E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\Debug/debug.h:
 
 E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\Peripheral\inc/ch32v20x.h:
 

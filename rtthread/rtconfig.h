@@ -15,7 +15,7 @@
 // <o>Maximal level of thread priority <8-256>
 //  <i>Default: 32
 //1、设置系统最大优先级，可设置范围 8 到 256，默认值 32，可修改。
-#define RT_THREAD_PRIORITY_MAX  16
+#define RT_THREAD_PRIORITY_MAX  32
 // <o>OS tick per second
 //  <i>Default: 1000   (1ms)
 //2、设置 RT-Thread 操作系统节拍，表示多少 tick 每秒，如默认值为 100 ，表示一个时钟节拍（os tick）长度为 10ms。常用值为 100 或 1000。时钟节拍率越快，系统的额外开销就越大。
@@ -123,5 +123,8 @@
 #define RT_USING_DEVICE
 
 //#define RT_USING_POSIX
+
+// 使用了 rtdbg log打印
+#define DBG_ENABLE
 
 #endif
