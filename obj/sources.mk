@@ -1,6 +1,6 @@
 ################################################################################
 # MRS Version: {"version":"1.8.5","date":"2023/05/22"}
-# 自动生成的文件。不要编辑！
+# 鑷姩鐢熸垚鐨勬枃浠躲�備笉瑕佺紪杈戯紒
 ################################################################################
 
 ELF_SRCS := 
@@ -31,6 +31,7 @@ bsp/src \
 drivers \
 rtthread \
 rtthread/components/device \
+rtthread/components/drivers/ipc \
 rtthread/components/drivers/misc \
 rtthread/components/drivers/serial \
 rtthread/components/finsh \

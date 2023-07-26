@@ -107,11 +107,36 @@ do                                                                            \
     }                                                                         \
     RT_DEBUG_NOT_IN_INTERRUPT;                                                \
     rt_hw_interrupt_enable(level);                                            \
+}                                                                              \
+while (0)
+
+/* "scheduler available" means:
+ *     1) the scheduler has been started.
+ *     2) not in interrupt context.
+ *     3) scheduler is not locked.
+ */
+#define RT_DEBUG_SCHEDULER_AVAILABLE(need_check)                              \
+do                                                                            \
+{                                                                             \
+    if (need_check)                                                           \
+    {                                                                         \
+        rt_base_t level;                                                      \
+        level = rt_hw_interrupt_disable();                                    \
+        if (rt_critical_level() != 0)                                         \
+        {                                                                     \
+            rt_kprintf("Function[%s]: scheduler is not available\n",          \
+                    __FUNCTION__);                                            \
+            RT_ASSERT(0)                                                      \
+        }                                                                     \
+        RT_DEBUG_IN_THREAD_CONTEXT;                                           \
+        rt_hw_interrupt_enable(level);                                        \
+    }                                                                         \
 }                                                                             \
 while (0)
 #else
 #define RT_DEBUG_NOT_IN_INTERRUPT
 #define RT_DEBUG_IN_THREAD_CONTEXT
+#define RT_DEBUG_SCHEDULER_AVAILABLE(need_check)
 #endif
 
 #else /* RT_DEBUG */

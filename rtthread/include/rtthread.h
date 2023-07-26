@@ -23,6 +23,9 @@
 #include <rtdef.h>
 #include <rtservice.h>
 
+// 自己加的
+#include <rtm.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

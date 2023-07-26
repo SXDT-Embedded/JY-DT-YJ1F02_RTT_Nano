@@ -1,6 +1,6 @@
 ################################################################################
 # MRS Version: {"version":"1.8.5","date":"2023/05/22"}
-# ×Ô¶¯Éú³ÉµÄÎÄ¼ş¡£²»Òª±à¼­£¡
+# è‡ªåŠ¨ç”Ÿæˆçš„æ–‡ä»¶ã€‚ä¸è¦ç¼–è¾‘ï¼
 ################################################################################
 
 -include ../makefile.init
@@ -14,6 +14,7 @@ RM := rm -rf
 -include rtthread/components/finsh/subdir.mk
 -include rtthread/components/drivers/serial/subdir.mk
 -include rtthread/components/drivers/misc/subdir.mk
+-include rtthread/components/drivers/ipc/subdir.mk
 -include rtthread/components/device/subdir.mk
 -include rtthread/subdir.mk
 -include drivers/subdir.mk
@@ -56,10 +57,10 @@ SECONDARY_SIZE += \
 JT-DT-YD1C01_RTT_Nano.siz \
 
 
-# ËùÓĞÄ¿±ê
+# æ‰€æœ‰ç›®æ ‡
 all: JT-DT-YD1C01_RTT_Nano.elf secondary-outputs
 
-# ¹¤¾ßµ÷ÓÃ
+# å·¥å…·è°ƒç”¨
 JT-DT-YD1C01_RTT_Nano.elf: $(OBJS) $(USER_OBJS)
 	@	@	riscv-none-embed-gcc -march=rv32imacxw -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized  -g -T "E:\BaiduSyncdisk\SXDT\Household_gas_alarm\Base_Iot\JT-DT-YD1C01_RTT_Nano\Ld\Link.ld" -nostartfiles -Xlinker --gc-sections -Xlinker --print-memory-usage -Wl,-Map,"JT-DT-YD1C01_RTT_Nano.map" --specs=nano.specs --specs=nosys.specs -o "JT-DT-YD1C01_RTT_Nano.elf" $(OBJS) $(USER_OBJS) $(LIBS) -lprintf
 	@	@
@@ -72,7 +73,7 @@ JT-DT-YD1C01_RTT_Nano.lst: JT-DT-YD1C01_RTT_Nano.elf
 JT-DT-YD1C01_RTT_Nano.siz: JT-DT-YD1C01_RTT_Nano.elf
 	@	riscv-none-embed-size --format=berkeley "JT-DT-YD1C01_RTT_Nano.elf"
 	@	@
-# ÆäËûÄ¿±ê
+# å…¶ä»–ç›®æ ‡
 clean:
 	-$(RM) $(ASM_UPPER_DEPS)$(OBJS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_DEPS)$(S_UPPER_DEPS)$(C_DEPS) JT-DT-YD1C01_RTT_Nano.elf
 	-@

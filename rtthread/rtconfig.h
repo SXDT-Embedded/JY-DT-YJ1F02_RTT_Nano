@@ -9,6 +9,9 @@
 //当系统加入 FinSH 组件源码后，需要在 rtconfig.h 中开启以下项
 #include "finsh_config.h"
 
+#define RT_DEBUG
+#define RT_DEBUG_COLOR
+
 //基础配置
 // <<< Use Configuration Wizard in Context Menu >>>
 // <h>Basic Configuration
