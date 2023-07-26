@@ -8,7 +8,7 @@ PROVIDE( _stack_size = __stack_size );
 MEMORY
 {
 	FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 64K
-	FLASH1 (rx) : ORIGIN = 0x00010000, LENGTH = 160K
+	/* FLASH1 (rx) : ORIGIN = 0x00010000, LENGTH = 160K */
 	RAM (xrw) : ORIGIN = 0x20000000, LENGTH = 20K
 }
 
@@ -68,7 +68,7 @@ SECTIONS
 
 	} >FLASH AT>FLASH
 	
-	.text1 :
+	/* .text1 :
 	{
 		. = ALIGN(4);
 		KEEP(*(.text1.used))
@@ -77,7 +77,7 @@ SECTIONS
 	    *(.text1.func)
 		*(.text1.*)
 		. = ALIGN(4);
-	} >FLASH1 AT>FLASH1
+	} >FLASH1 AT>FLASH1 */
 
 	.fini :
 	{
