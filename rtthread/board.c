@@ -17,6 +17,26 @@
 #include <rthw.h>
 #include <rtthread.h>
 
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+/* 复位命令 */
+static void reboot(void)
+{
+    NVIC_SystemReset();
+}
+//FINSH_FUNCTION_EXPORT_ALIAS(reboot, __cmd_reboot, Reboot System);
+MSH_CMD_EXPORT(reboot, reboot the board);
+
+/* clear */
+static void clear(void)
+{
+    rt_kprintf("\x1b[2J\x1b[H");
+}
+// FINSH_FUNCTION_EXPORT(clear, the terminal screen);
+MSH_CMD_EXPORT(clear, the terminal screen);
+
+#endif /* RT_USING_FINSH */
+
 // Holds the system core clock, which is the system clock
 // frequency supplied to the SysTick timer and the processor
 // core clock.
@@ -33,15 +53,12 @@ static uint32_t _SysTick_Config(rt_uint32_t ticks)
     SysTick->SR = 0;
     SysTick->CNT = 0;
     SysTick->CMP = ticks - 1;
-    SysTick->CTLR = 0xF;
+    SysTick->CTLR = 0xF;        // 向上计数
+//    SysTick->CTLR = 0x001F; // 向下计数   0    1 1111
     return 0;
 }
 
 #if defined(RT_USING_USER_MAIN) && defined(RT_USING_HEAP)
-// 最大堆大小开关
-// 参考：https://club.rt-thread.org/ask/article/001065082e9ae611.html
-#define USING_MAX_HEAP_SIZE 1
-
 #if (USING_MAX_HEAP_SIZE == 0)
 #define RT_HEAP_SIZE (1024)
 static uint32_t rt_heap[RT_HEAP_SIZE]; // heap default size: 4K(1024 * 4)
@@ -62,14 +79,13 @@ RT_WEAK void *rt_heap_end_get(void)
 {
     return HEAP_END;
 }
-#endif /* END OF  USING_MAX_HEAP_SIZE*/
-
+#endif /* !USING_MAX_HEAP_SIZE*/
 #endif
 
 /**
  * This function will initial your board.
  */
-void rt_hw_board_init()
+void rt_hw_board_init(void)
 {
     /* System Tick Configuration */
     // #error "TODO 1: OS Tick Configuration."
@@ -78,6 +94,7 @@ void rt_hw_board_init()
      * Enable the hardware timer and call the rt_os_tick_callback function
      * periodically with the frequency RT_TICK_PER_SECOND.
      */
+//    96000000 / 1000 = 96000
     _SysTick_Config(SystemCoreClock / RT_TICK_PER_SECOND);
     /* Call components board initial (use INIT_BOARD_EXPORT()) */
 #ifdef RT_USING_COMPONENTS_INIT
@@ -105,9 +122,17 @@ void SysTick_Handler(void)
     FREE_INT_SP();
 }
 
+//#define DBG_TAG "buzzer"
+//#define DBG_LVL DBG_ERROR
+//#include <rtdbg.h>
+
 // 参考：[001] [RT-Thread 学习笔记] 高精度延时函数 rt_hw_us_delay 的陷阱与优化
 // https://blog.csdn.net/kouxi1/article/details/122581857
+
 // 其中入口参数 us 指示出需要延时的微秒数目，这个函数只能支持低于 1 OS Tick 的延时。
+
+// 可以支持≥ 1 os tick 的延时时间！但是不建议这样使用
+// ，如果需要延时时间≥ 1 os tick，请使用 rt_thread_delay() 或 rt_thread_mdelay 函数
 void rt_hw_us_delay(rt_uint32_t us)
 {
     rt_uint32_t ticks;
@@ -126,11 +151,16 @@ void rt_hw_us_delay(rt_uint32_t us)
         {
             if (tnow < told)
             {
-                tcnt += told - tnow;
+                // 取决于 SysTick->CNT 递增或递减，这里是递增的
+                // 通过一个 tcnt 变量将当前计数值 tnow 与上一时刻的计数值 told 的差值进行累加（注意 SysTick->VAL 为递减还是递增计数器）
+                // ，当累加值 tcnt≥延时节拍 ticks 时跳出循环，而 tcnt 最大值为 0xffff ffff，不可能出现死循环的情况
+//                tcnt += told - tnow;
+                tcnt += reload - told + tnow;
             }
             else
             {
-                tcnt += reload - tnow + told;
+//                tcnt += reload - tnow + told;
+                tcnt += tnow - told;
             }
             told = tnow;
             if (tcnt >= ticks)
@@ -141,20 +171,7 @@ void rt_hw_us_delay(rt_uint32_t us)
     }
 }
 
-/* 复位命令 */
-long reboot(void)
-{
-    NVIC_SystemReset();
-    return 0;
-}
-// FINSH_FUNCTION_EXPORT(reboot, reboot the board);
-MSH_CMD_EXPORT(reboot, reboot the board);
 
-/* clear */
-long clear(void)
-{
-    rt_kprintf("\x1b[2J\x1b[H");
-    return 0;
-}
-// FINSH_FUNCTION_EXPORT(clear, the terminal screen);
-MSH_CMD_EXPORT(clear, the terminal screen);
+
+
+

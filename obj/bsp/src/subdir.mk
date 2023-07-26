@@ -5,12 +5,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../bsp/src/bsp_buzzer.c \
 ../bsp/src/bsp_led.c 
 
 OBJS += \
+./bsp/src/bsp_buzzer.o \
 ./bsp/src/bsp_led.o 
 
 C_DEPS += \
+./bsp/src/bsp_buzzer.d \
 ./bsp/src/bsp_led.d 
 
 
