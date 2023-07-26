@@ -53,8 +53,9 @@ static uint32_t _SysTick_Config(rt_uint32_t ticks)
     SysTick->SR = 0;
     SysTick->CNT = 0;
     SysTick->CMP = ticks - 1;
-    SysTick->CTLR = 0xF;        // 向上计数
-//    SysTick->CTLR = 0x001F; // 向下计数   0    1 1111
+//    SysTick->CTLR = 0xF;        // 向上计数
+    // 改成向下计数，搞得和CM3类似
+    SysTick->CTLR = 0x001F; // 向下计数   0----    1 1111
     return 0;
 }
 
@@ -151,16 +152,16 @@ void rt_hw_us_delay(rt_uint32_t us)
         {
             if (tnow < told)
             {
-                // 取决于 SysTick->CNT 递增或递减，这里是递增的
+                // 取决于 SysTick->CNT 递增或递减
                 // 通过一个 tcnt 变量将当前计数值 tnow 与上一时刻的计数值 told 的差值进行累加（注意 SysTick->VAL 为递减还是递增计数器）
                 // ，当累加值 tcnt≥延时节拍 ticks 时跳出循环，而 tcnt 最大值为 0xffff ffff，不可能出现死循环的情况
-//                tcnt += told - tnow;
-                tcnt += reload - told + tnow;
+                tcnt += told - tnow;            // SysTick 递增的话
+//                tcnt += reload - told + tnow; // SysTick 递减的话
             }
             else
             {
-//                tcnt += reload - tnow + told;
-                tcnt += tnow - told;
+                tcnt += reload - tnow + told;   // SysTick 递增的话
+//                tcnt += tnow - told;          // SysTick 递减的话
             }
             told = tnow;
             if (tcnt >= ticks)

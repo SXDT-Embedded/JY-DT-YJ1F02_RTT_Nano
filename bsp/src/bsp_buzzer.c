@@ -12,6 +12,9 @@
 #include <rtthread.h>
 #include <rthw.h>
 
+//用到了atoi()
+#include <stdlib.h>
+
 #define DBG_TAG "buzzer"
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
@@ -38,10 +41,21 @@ int BSP_BUZZER_Init(void)
 }
 INIT_DEVICE_EXPORT(BSP_BUZZER_Init);
 
-static void test_us(void)
+static void test_us(int argc, char **argv)
 {
-    BUZZER_ON;
-    rt_hw_us_delay(900);
-    BUZZER_OFF;
+    if (argc == 2)
+    {
+        uint32_t us = atoi(argv[1]);
+        LOG_D("us = %d", us);
+
+        BUZZER_ON;
+        rt_hw_us_delay(us);
+        BUZZER_OFF;
+    }
+    else
+    {
+        LOG_E("--used test_us [nus]");
+        return;
+    }
 }
-MSH_CMD_EXPORT(test_us, test_us);
+MSH_CMD_EXPORT(test_us, test_us(nus));
