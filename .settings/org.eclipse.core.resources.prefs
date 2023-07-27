@@ -9,4 +9,5 @@ encoding//rtthread/components/drivers/ipc/completion.c=GBK
 encoding//rtthread/components/drivers/ipc/dataqueue.c=GBK
 encoding//rtthread/components/drivers/misc/pin.c=GBK
 encoding//rtthread/include/rtdebug.h=GBK
+encoding//rtthread/include/rtdef.h=GBK
 encoding//rtthread/rtconfig.h=UTF-8

@@ -762,6 +762,7 @@ enum rt_device_class_type
     RT_Device_Class_I2CBUS,                             /**< I2C bus device */
     RT_Device_Class_USBDevice,                          /**< USB slave device */
     RT_Device_Class_USBHost,                            /**< USB host bus */
+    RT_Device_Class_USBOTG,                             /**< USB OTG bus */
     RT_Device_Class_SPIBUS,                             /**< SPI bus device */
     RT_Device_Class_SPIDevice,                          /**< SPI device */
     RT_Device_Class_SDIO,                               /**< SDIO bus device */
@@ -772,6 +773,14 @@ enum rt_device_class_type
     RT_Device_Class_Miscellaneous,                      /**< Miscellaneous device */
     RT_Device_Class_Sensor,                             /**< Sensor device */
     RT_Device_Class_Touch,                              /**< Touch device */
+    RT_Device_Class_PHY,                                /**< PHY device */
+    RT_Device_Class_Security,                           /**< Security device */
+    RT_Device_Class_WLAN,                               /**< WLAN device */
+    RT_Device_Class_Pin,                                /**< Pin device */
+    RT_Device_Class_ADC,                                /**< ADC device */
+    RT_Device_Class_DAC,                                /**< DAC device */
+    RT_Device_Class_WDT,                                /**< WDT device */
+    RT_Device_Class_PWM,                                /**< PWM device */
     RT_Device_Class_Unknown                             /**< unknown device */
 };
 
