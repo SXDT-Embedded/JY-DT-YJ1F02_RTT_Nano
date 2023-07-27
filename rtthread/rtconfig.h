@@ -119,14 +119,21 @@
 
 // <<< end of configuration section >>>
 
-#define RT_USING_SERIAL
+
 #define RT_USING_PIN
-#define RT_USING_UART1
+#define RT_USING_SERIAL
 #define RT_USING_DEVICE_IPC
 
 //DEVICE 框架配置
 //当系统中加入 device 框架源码时，则需要在 rtconfig.h 中开启以下项
 #define RT_USING_DEVICE
+
+/* On-chip Peripheral Drivers */
+
+#define BSP_USING_UART
+#define BSP_USING_UART1
+#define BSP_UART1_FIFO_SIZE 10
+/* end of On-chip Peripheral Drivers */
 
 //#define RT_USING_POSIX
 

@@ -3,6 +3,9 @@
         "finsh_config.h": "c",
         "compare": "cpp",
         "bsp_led.h": "c",
-        "board.h": "c"
+        "board.h": "c",
+        "rthw.h": "c",
+        "drv_usart.h": "c",
+        "rtdevice.h": "c"
     }
 }
