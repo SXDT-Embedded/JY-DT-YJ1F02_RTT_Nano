@@ -339,7 +339,7 @@ int rt_hw_usart_init(void)
                                         , &uart_obj[i]);
             RT_ASSERT(result == RT_EOK);
         }
-        // TODO: 准备测试下 串口 DMA收发
+        // TODO: serial下的串口 DMA收发待完成
         else
         {
             /* init UART object */
@@ -397,6 +397,7 @@ volatile size_t usart1_tx_dma_current_len;
 volatile size_t usart2_tx_dma_current_len;
 volatile size_t usart3_tx_dma_current_len;
 
+// TODO: 换成信号量
 volatile uint8_t uart1_rev_parity_flag = 0; //  串口1接收数据奇偶校验的标志
 volatile uint8_t uart2_rev_parity_flag = 0; //  串口2接收数据奇偶校验的标志
 volatile uint8_t uart3_rev_parity_flag = 0; //  串口3接收数据奇偶校验的标志
@@ -408,7 +409,7 @@ volatile uint8_t uart3_rev_flag = 0; //  串口3接收到数据待解析的标�
 void USART1_IRQHandler(void) __attribute__((interrupt()));
 void USART2_IRQHandler(void) __attribute__((interrupt()));
 void USART3_IRQHandler(void) __attribute__((interrupt()));
-// void USART4_IRQHandler(void) __attribute__((interrupt()));
+void UART4_IRQHandler(void) __attribute__((interrupt()));
 
 // USART1 - TX
 void DMA1_Channel4_IRQHandler(void) __attribute__((interrupt()));
@@ -767,6 +768,7 @@ unsigned int UART3_Read(void *buf, unsigned int len)
     return lwrb_read(&usart3_rx_rb, buf, len);
 }
 
+// TODO: 用预编译BSP_USING_UART1
 void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
 {
     GPIO_InitTypeDef GPIO_InitStructure = {0};

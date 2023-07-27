@@ -79,60 +79,24 @@
 #define RT_USING_SMALL_MEM      // 是否使用 小内存管理
 //#define RT_USING_TINY_SIZE    // 是否使用 小体积的算法，牵扯到 rt_memset、rt_memcpy 所产生的体积
 
-// <h>Console Configuration
-// <c1>Using console
-//  <i>Using console
 #define RT_USING_CONSOLE
-// </c>
-// <o>the buffer size of console <1-1024>
-//  <i>the buffer size of console
-//  <i>Default: 128  (128Byte)
 #define RT_CONSOLEBUF_SIZE          128
 #define RT_CONSOLE_DEVICE_NAME      "uart1"
-// </h>
-
-#if 0
-#if defined(RT_USING_FINSH)
-    #define FINSH_USING_MSH
-    #define FINSH_USING_MSH_ONLY
-    // <h>Finsh Configuration
-    // <o>the priority of finsh thread <1-7>
-    //  <i>the priority of finsh thread
-    //  <i>Default: 6
-    #define __FINSH_THREAD_PRIORITY     5
-    #define FINSH_THREAD_PRIORITY       (RT_THREAD_PRIORITY_MAX / 8 * __FINSH_THREAD_PRIORITY + 1)
-    // <o>the stack of finsh thread <1-4096>
-    //  <i>the stack of finsh thread
-    //  <i>Default: 4096  (4096Byte)
-    #define FINSH_THREAD_STACK_SIZE     1024
-    // <o>the history lines of finsh thread <1-32>
-    //  <i>the history lines of finsh thread
-    //  <i>Default: 5
-    #define FINSH_USING_HISTORY
-    #define FINSH_HISTORY_LINES         5
-    #define FINSH_USING_SYMTAB
-    #define FINSH_USING_DESCRIPTION
-    #define FINSH_CMD_SIZE 80
-    // </h>
-#endif
-#endif
-
-// <<< end of configuration section >>>
-
 
 #define RT_USING_PIN
 // #define RT_USING_SERIAL
-#define RT_USING_DEVICE_IPC
 
 //DEVICE 框架配置
 //当系统中加入 device 框架源码时，则需要在 rtconfig.h 中开启以下项
 #define RT_USING_DEVICE
+#define RT_USING_DEVICE_IPC
 
 /* On-chip Peripheral Drivers */
 
 #define BSP_USING_UART
 #define BSP_USING_UART1
 #define BSP_UART1_FIFO_SIZE 10
+
 /* end of On-chip Peripheral Drivers */
 
 //#define RT_USING_POSIX
