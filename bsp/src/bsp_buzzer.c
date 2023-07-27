@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-07-26 08:38:26
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-07-26 08:39:42
+ * @LastEditTime : 2023-07-27 13:01:10
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_buzzer.c
  * @Description  :
  *
@@ -25,18 +25,10 @@
  */
 int BSP_BUZZER_Init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    rt_pin_mode(BUZZER_PIN, PIN_MODE_OUTPUT);
+    BUZZER_OFF();
 
-    BUZZER_GPIO_CLK_ENABLE;
-
-    GPIO_InitStructure.GPIO_Pin = BUZZER_GPIO_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(BUZZER_GPIO_PORT, &GPIO_InitStructure);
-
-    BUZZER_OFF;
-
-    LOG_D("USER_BUZZER_Init!");
+    LOG_D("BSP_BUZZER_Init");
     return 0;
 }
 INIT_DEVICE_EXPORT(BSP_BUZZER_Init);
@@ -48,9 +40,9 @@ static void test_us(int argc, char **argv)
         uint32_t us = atoi(argv[1]);
         LOG_D("us = %d", us);
 
-        BUZZER_ON;
+        BUZZER_ON();
         rt_hw_us_delay(us);
-        BUZZER_OFF;
+        BUZZER_OFF();
     }
     else
     {

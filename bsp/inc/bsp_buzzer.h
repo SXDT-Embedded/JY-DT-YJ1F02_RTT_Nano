@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-07-26 08:38:33
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-07-26 08:38:33
+ * @LastEditTime : 2023-07-27 13:00:22
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\inc\bsp_buzzer.h
  * @Description  :
  *
@@ -12,14 +12,16 @@
 #define __BSP_BUZZER_H__
 
 #include "board.h"
+#include "pin.h"
+#include "drv_gpio.h"
 
-#define BUZZER_GPIO_PIN           GPIO_Pin_15
-#define BUZZER_GPIO_PORT          GPIOB
-#define BUZZER_GPIO_CLK_ENABLE    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE)
+#define BUZZER_PIN               GET_PIN(B, 15)
+#define BUZZER_ON()              rt_pin_write(BUZZER_PIN, PIN_HIGH)
+#define BUZZER_OFF()             rt_pin_write(BUZZER_PIN, PIN_LOW)
+#define READ_BUZZER()            rt_pin_read(BUZZER_PIN)
+#define BUZZER_TOGGLE()          rt_pin_write(BUZZER_PIN, !rt_pin_read(BUZZER_PIN))
 
-#define BUZZER_ON           GPIO_WriteBit(BUZZER_GPIO_PORT, BUZZER_GPIO_PIN, Bit_SET)
-#define BUZZER_OFF          GPIO_WriteBit(BUZZER_GPIO_PORT, BUZZER_GPIO_PIN, Bit_RESET)
-#define BUZZER_TOGGLE       GPIO_WriteBit(BUZZER_GPIO_PORT, BUZZER_GPIO_PIN, !GPIO_ReadOutputDataBit(BUZZER_GPIO_PORT, BUZZER_GPIO_PIN))
 
+int BSP_BUZZER_Init(void);
 
 #endif // !__BSP_BUZZER_H__
