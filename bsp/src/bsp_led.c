@@ -21,11 +21,19 @@ int BSP_LED_Init(void)
     rt_pin_mode(LED_G_PIN, PIN_MODE_OUTPUT);
     rt_pin_mode(LED_Y_PIN, PIN_MODE_OUTPUT);
 
+    rt_pin_mode(NETLED_R_PIN, PIN_MODE_OUTPUT);
+    rt_pin_mode(NETLED_G_PIN, PIN_MODE_OUTPUT);
+    rt_pin_mode(NETLED_Y_PIN, PIN_MODE_OUTPUT);
+
     LED_R_OFF();
     LED_G_OFF();
     LED_Y_OFF();
 
-    LOG_D("USER_LED_Init!");
+    NETLED_R_OFF();
+    NETLED_G_OFF();
+    NETLED_Y_OFF();
+
+    LOG_D("BSP_LED_Init");
     return 0;
 }
 INIT_DEVICE_EXPORT(BSP_LED_Init);

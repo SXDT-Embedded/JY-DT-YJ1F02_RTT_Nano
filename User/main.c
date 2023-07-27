@@ -19,7 +19,16 @@ int main(void)
 	while(1)
 	{
 	    LED_R_TOGGLE();
+	    NETLED_R_TOGGLE();
 	    rt_thread_mdelay(500);
+
+	    LED_G_TOGGLE();
+        NETLED_G_TOGGLE();
+        rt_thread_mdelay(500);
+
+        LED_Y_TOGGLE();
+        NETLED_Y_TOGGLE();
+        rt_thread_mdelay(500);
 	}
 }
 
