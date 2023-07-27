@@ -96,9 +96,7 @@ void rt_hw_board_init(void)
 #endif
 
     /* USART driver initialization is open by default */
-#ifdef RT_USING_SERIAL
     rt_hw_usart_init();
-#endif
 
 #ifdef RT_USING_CONSOLE
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);

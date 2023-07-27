@@ -17,6 +17,7 @@ encoding//rtthread/board.h=UTF-8
 encoding//rtthread/components/device/device.c=GBK
 encoding//rtthread/components/drivers/include/drivers/pin.h=GBK
 encoding//rtthread/components/drivers/include/drivers/serial.h=GBK
+encoding//rtthread/components/drivers/include/rtdevice.h=GBK
 encoding//rtthread/components/drivers/ipc/completion.c=GBK
 encoding//rtthread/components/drivers/ipc/dataqueue.c=GBK
 encoding//rtthread/components/drivers/misc/pin.c=GBK

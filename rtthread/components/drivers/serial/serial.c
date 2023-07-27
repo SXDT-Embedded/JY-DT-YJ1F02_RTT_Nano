@@ -36,6 +36,8 @@
 #define DBG_LVL    DBG_INFO
 #include <rtdbg.h>
 
+#include "serial.h"
+
 #ifdef RT_USING_POSIX_STDIO
 #include <dfs_file.h>
 #include <fcntl.h>

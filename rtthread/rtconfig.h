@@ -121,7 +121,7 @@
 
 
 #define RT_USING_PIN
-#define RT_USING_SERIAL
+// #define RT_USING_SERIAL
 #define RT_USING_DEVICE_IPC
 
 //DEVICE 框架配置
