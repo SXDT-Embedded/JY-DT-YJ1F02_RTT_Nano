@@ -6,6 +6,9 @@
         "board.h": "c",
         "rthw.h": "c",
         "drv_usart.h": "c",
-        "rtdevice.h": "c"
+        "rtdevice.h": "c",
+        "serial.h": "c",
+        "drv_log.h": "c",
+        "rtdbg.h": "c"
     }
 }

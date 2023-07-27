@@ -6,8 +6,17 @@
 #ifdef RT_USING_SERIAL
 
 //#define DRV_DEBUG
-#define LOG_TAG              "drv.uart"
-#include <drv_log.h>
+// #define LOG_TAG              "drv.uart"
+// #include <drv_log.h>
+
+//#define DRV_DEBUG
+#define DBG_TAG              "drv.usart"
+#ifdef DRV_DEBUG
+#define DBG_LVL               DBG_LOG
+#else
+#define DBG_LVL               DBG_INFO
+#endif /* DRV_DEBUG */
+#include <rtdbg.h>
 
 
 #if !defined(BSP_USING_UART1) && !defined(BSP_USING_UART2) && !defined(BSP_USING_UART3) && !defined(BSP_USING_UART4)
@@ -317,17 +326,36 @@ int rt_hw_usart_init(void)
 
     for (int i = 0; i < obj_num; i++)
     {
-        /* init UART object */
-        uart_obj[i].config        = &uart_config[i];
-        uart_obj[i].serial.ops    = &ch32_uart_ops;
-        uart_obj[i].serial.config = config;
+        if (uart_obj[i].config->name == "uart1")
+        {
+            /* init UART object */
+            uart_obj[i].config        = &uart_config[i];
+            uart_obj[i].serial.ops    = &ch32_uart_ops;
+            uart_obj[i].serial.config = config;
 
-        /* register UART device */
-        result = rt_hw_serial_register(&uart_obj[i].serial, uart_obj[i].config->name,
-                                       RT_DEVICE_FLAG_RDWR
-                                       | RT_DEVICE_FLAG_INT_RX
-                                       , &uart_obj[i]);
-        RT_ASSERT(result == RT_EOK);
+            /* register UART device */
+            result = rt_hw_serial_register(&uart_obj[i].serial, uart_obj[i].config->name,
+                                        RT_DEVICE_FLAG_RDWR
+                                        | RT_DEVICE_FLAG_INT_RX
+                                        , &uart_obj[i]);
+            RT_ASSERT(result == RT_EOK);
+        }
+        // TODO: 准备测试下 串口 DMA收发
+        else
+        {
+            /* init UART object */
+            uart_obj[i].config        = &uart_config[i];
+            uart_obj[i].serial.ops    = &ch32_uart_ops;
+            uart_obj[i].serial.config = config;
+
+            /* register UART device */
+            result = rt_hw_serial_register(&uart_obj[i].serial, uart_obj[i].config->name,
+                                        RT_DEVICE_FLAG_RDWR
+                                        | RT_DEVICE_FLAG_DMA_RX
+                                        | RT_DEVICE_FLAG_DMA_TX
+                                        , &uart_obj[i]);
+            RT_ASSERT(result == RT_EOK);
+        }
     }
 
     return result;
