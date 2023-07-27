@@ -62,7 +62,7 @@ char rt_hw_console_getchar(void)
     // {
     //     rt_sem_take(&shell_rx_sem, RT_WAITING_FOREVER);
     // }
-    int ch = -1;
+    char ch = 0;
 
     lwrb_read(&usart1_rx_rb, &ch, 1);
 
