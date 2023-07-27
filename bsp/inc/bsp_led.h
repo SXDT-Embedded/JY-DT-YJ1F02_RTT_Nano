@@ -12,33 +12,26 @@
 #define __BSP_LED_H__
 
 #include "board.h"
+#include "pin.h"
+#include "drv_gpio.h"
 
-#define LED_R_PIN                   GPIO_Pin_5
-#define LED_R_GPIO_PORT             GPIOA
-#define LED_R_GPIO_CLK_ENABLE       RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE)
+#define LED_R_PIN               GET_PIN(A, 5)
+#define LED_R_ON()              rt_pin_write(LED_R_PIN, PIN_HIGH)
+#define LED_R_OFF()             rt_pin_write(LED_R_PIN, PIN_LOW)
+#define READ_LED_R()            rt_pin_read(LED_R_PIN)
+#define LED_R_TOGGLE()          rt_pin_write(LED_R_PIN, !rt_pin_read(LED_R_PIN))
 
-#define LED_G_PIN                   GPIO_Pin_12
-#define LED_G_GPIO_PORT             GPIOB
-#define LED_G_GPIO_CLK_ENABLE       RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE)
+#define LED_G_PIN               GET_PIN(B, 12)
+#define LED_G_ON()              rt_pin_write(LED_G_PIN, PIN_HIGH)
+#define LED_G_OFF()             rt_pin_write(LED_G_PIN, PIN_LOW)
+#define READ_LED_G()            rt_pin_read(LED_G_PIN)
+#define LED_G_TOGGLE()          rt_pin_write(LED_G_PIN, !rt_pin_read(LED_G_PIN))
 
-#define LED_Y_PIN                   GPIO_Pin_4
-#define LED_Y_GPIO_PORT             GPIOA
-#define LED_Y_GPIO_CLK_ENABLE       RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE)
-
-#define LED_R_ON            GPIO_WriteBit(LED_R_GPIO_PORT, LED_R_PIN, Bit_SET)
-#define LED_R_OFF           GPIO_WriteBit(LED_R_GPIO_PORT, LED_R_PIN, Bit_RESET)
-#define READ_LED_R          GPIO_ReadOutputDataBit(LED_R_GPIO_PORT, LED_R_PIN)
-#define LED_R_TOGGLE        GPIO_WriteBit(LED_R_GPIO_PORT, LED_R_PIN, !READ_LED_R)
-
-#define LED_G_ON            GPIO_WriteBit(LED_G_GPIO_PORT, LED_G_PIN, Bit_SET)
-#define LED_G_OFF           GPIO_WriteBit(LED_G_GPIO_PORT, LED_G_PIN, Bit_RESET)
-#define READ_LED_G          GPIO_ReadOutputDataBit(LED_G_GPIO_PORT, LED_G_PIN)
-#define LED_G_TOGGLE        GPIO_WriteBit(LED_G_GPIO_PORT, LED_G_PIN, !READ_LED_G)
-
-#define LED_Y_ON            GPIO_WriteBit(LED_Y_GPIO_PORT, LED_Y_PIN, Bit_SET)
-#define LED_Y_OFF           GPIO_WriteBit(LED_Y_GPIO_PORT, LED_Y_PIN, Bit_RESET)
-#define READ_LED_Y          GPIO_ReadOutputDataBit(LED_Y_GPIO_PORT, LED_Y_PIN)
-#define LED_Y_TOGGLE        GPIO_WriteBit(LED_Y_GPIO_PORT, LED_Y_PIN, !READ_LED_Y)
+#define LED_Y_PIN               GET_PIN(A, 4)
+#define LED_Y_ON()              rt_pin_write(LED_Y_PIN, PIN_HIGH)
+#define LED_Y_OFF()             rt_pin_write(LED_Y_PIN, PIN_LOW)
+#define READ_LED_Y()            rt_pin_read(LED_Y_PIN)
+#define LED_Y_TOGGLE()          rt_pin_write(LED_Y_PIN, !rt_pin_read(LED_Y_PIN))
 
 
 int BSP_LED_Init(void);

@@ -17,23 +17,13 @@
 
 int BSP_LED_Init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    rt_pin_mode(LED_R_PIN, PIN_MODE_OUTPUT);
+    rt_pin_mode(LED_G_PIN, PIN_MODE_OUTPUT);
+    rt_pin_mode(LED_Y_PIN, PIN_MODE_OUTPUT);
 
-    LED_R_GPIO_CLK_ENABLE;
-    LED_G_GPIO_CLK_ENABLE;
-    LED_Y_GPIO_CLK_ENABLE;
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-
-    GPIO_InitStructure.GPIO_Pin = LED_R_PIN;
-    GPIO_Init(LED_R_GPIO_PORT, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = LED_G_PIN;
-    GPIO_Init(LED_G_GPIO_PORT, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = LED_Y_PIN;
-    GPIO_Init(LED_Y_GPIO_PORT, &GPIO_InitStructure);
+    LED_R_OFF();
+    LED_G_OFF();
+    LED_Y_OFF();
 
     LOG_D("USER_LED_Init!");
     return 0;
