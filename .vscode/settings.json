@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "finsh_config.h": "c",
-        "compare": "cpp",
-        "bsp_led.h": "c",
-        "board.h": "c"
-    }
-}
