@@ -55,6 +55,7 @@
 //设置是否使用钩子函数，默认关闭。
 #define RT_USING_HOOK                         // 是否 开启系统钩子功能
 #define RT_USING_IDLE_HOOK                    // 是否 开启空闲线程钩子功能
+#define IDLE_THREAD_STACK_SIZE     320
 
 //软件定时器配置
 //设置是否启用软件定时器，以及相关参数的配置，默认关闭。
