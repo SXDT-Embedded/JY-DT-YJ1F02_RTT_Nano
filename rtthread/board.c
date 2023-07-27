@@ -95,8 +95,7 @@ void rt_hw_board_init(void)
     rt_system_heap_init(rt_heap_begin_get(), rt_heap_end_get());
 #endif
 
-    /* USART driver initialization is open by default */
-    rt_hw_usart_init();
+
 
 #ifdef RT_USING_CONSOLE
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
@@ -106,6 +105,9 @@ void rt_hw_board_init(void)
 #ifdef RT_USING_COMPONENTS_INIT
     rt_components_board_init();
 #endif
+
+    /* USART driver initialization is open by default */
+        rt_hw_usart_init();
 }
 
 void SysTick_Handler(void) __attribute__((interrupt()));

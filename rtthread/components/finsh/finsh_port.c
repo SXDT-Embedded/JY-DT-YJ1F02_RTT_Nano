@@ -37,32 +37,46 @@ char rt_hw_console_getchar(void)
 /* 移植控制台，实现控制台输出, 对接 rt_hw_console_output */
 void rt_hw_console_output(const char *str)
 {
-    rt_size_t i = 0, size = 0;
+
+    rt_size_t i = 0, size = 0, j = 0;
     char a = '\r';
 
     size = rt_strlen(str);
-    for (i = 0; i < size; i++)
+    rt_uint8_t buf[size * 2];
+
+    for (i = 0; i < size; i++, j++)
     {
         if (*(str + i) == '\n')
         {
-            USART1_SendArray(&a, 1);
+            // USART1_SendArray(&a, 1);
+            buf[j] = a;
+            j++;
         }
-        USART1_SendArray((str + i), 1);
+        // USART1_SendArray((str + i), 1);
+        buf[j] = str[i];
     }
+
+    USART1_SendArray(buf, j);
 }
+
+// extern rt_sem_t uart1_rev_sem;
 
 /* 移植 FinSH，实现命令行交互, 需要添加 FinSH 源码，然后再对接 rt_hw_console_getchar */
 /* 中断方式 */
 char rt_hw_console_getchar(void)
 {
-    // char ch = 0;
+    char ch = 0;
 
     // /* 从 ringbuffer 中拿出数据 */
     // while (rt_ringbuffer_getchar(&uart_rxcb, (rt_uint8_t *)&ch) != 1)
     // {
     //     rt_sem_take(&shell_rx_sem, RT_WAITING_FOREVER);
     // }
-    char ch = 0;
+
+    // while (lwrb_read(&usart1_rx_rb, &ch, 1) != 1)
+    // {
+    //     rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER);
+    // }
 
     lwrb_read(&usart1_rx_rb, &ch, 1);
 

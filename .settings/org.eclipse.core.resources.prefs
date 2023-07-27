@@ -30,3 +30,5 @@ encoding//rtthread/include/rtdebug.h=GBK
 encoding//rtthread/include/rtdef.h=GBK
 encoding//rtthread/libcpu/risc-v/common/cpuport.c=GBK
 encoding//rtthread/rtconfig.h=UTF-8
+encoding//rtthread/src/ipc.c=GBK
+encoding//rtthread/src/irq.c=GBK

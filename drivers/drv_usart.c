@@ -12,7 +12,7 @@
 #ifdef DRV_DEBUG
 #define DBG_LVL               DBG_LOG
 #else
-#define DBG_LVL               DBG_INFO
+#define DBG_LVL               DBG_LOG
 #endif /* DRV_DEBUG */
 #include <rtdbg.h>
 
@@ -397,6 +397,16 @@ volatile size_t usart1_tx_dma_current_len;
 volatile size_t usart2_tx_dma_current_len;
 volatile size_t usart3_tx_dma_current_len;
 
+rt_sem_t uart1_rev_sem = RT_NULL;
+rt_sem_t uart2_rev_sem = RT_NULL;
+rt_sem_t uart3_rev_sem = RT_NULL;
+
+rt_sem_t uart1_rev_parity_sem = RT_NULL;
+rt_sem_t uart2_rev_parity_sem = RT_NULL;
+rt_sem_t uart3_rev_parity_sem = RT_NULL;
+
+static rt_thread_t uart1_rx_dma_thread = RT_NULL;
+
 // TODO: 换成信号量
 volatile uint8_t uart1_rev_parity_flag = 0; //  串口1接收数据奇偶校验的标志
 volatile uint8_t uart2_rev_parity_flag = 0; //  串口2接收数据奇偶校验的标志
@@ -413,6 +423,8 @@ void UART4_IRQHandler(void) __attribute__((interrupt()));
 
 // USART1 - TX
 void DMA1_Channel4_IRQHandler(void) __attribute__((interrupt()));
+// USART1 - RX
+void DMA1_Channel5_IRQHandler(void) __attribute__((interrupt()));
 
 // USART2 - RX
 void DMA1_Channel6_IRQHandler(void) __attribute__((interrupt()));
@@ -472,7 +484,7 @@ void USART1_RxCheck(void)
     static size_t old_pos;
     size_t pos;
 
-    if(uart1_rev_parity_flag == 0)
+    // if(uart1_rev_parity_flag == 0)
     {
         /* Calculate current position in buffer and check for new data available */
         pos = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - DMA_GetCurrDataCounter(USART1_DMA_RX_CHANNEL);
@@ -496,12 +508,12 @@ void USART1_RxCheck(void)
             old_pos = pos;  /* Save current position as old for next transfers */
         }
     }
-    else
-    {
-        pos = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - DMA_GetCurrDataCounter(USART1_DMA_RX_CHANNEL);
-        old_pos = pos;  /* Save current position as old for next transfers */
-        uart1_rev_parity_flag = 0;
-    }
+    // else
+    // {
+    //     pos = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - DMA_GetCurrDataCounter(USART1_DMA_RX_CHANNEL);
+    //     old_pos = pos;  /* Save current position as old for next transfers */
+    //     uart1_rev_parity_flag = 0;
+    // }
 }
 
 void USART2_RxCheck(void)
@@ -691,6 +703,8 @@ uint8_t USART3_StartTxDMATransfer(void)
 void USART1_ProcessData(const void* data, size_t len)
 {
     lwrb_write(&usart1_rx_rb, data, len);  /* Write data to receive buffer */
+    // rt_sem_release(uart1_rev_sem);
+//    LOG_D("USART1_ProcessData");
 }
 
 /**
@@ -766,6 +780,23 @@ unsigned int USART3_SendArray(const void* data, unsigned int len)
 unsigned int UART3_Read(void *buf, unsigned int len)
 {
     return lwrb_read(&usart3_rx_rb, buf, len);
+}
+
+static void uart1_rx_dma_thread_entry(void* parameter)
+{
+    rt_kprintf("uart1_rx_dma_thread_entry\r\n");
+
+    while (1)
+    {
+        rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER);
+        // if (rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER))
+        // {
+        //     USART1_RxCheck();
+        // }
+        LOG_D("uart1_rev_sem");
+        USART1_RxCheck();
+        // rt_thread_mdelay(10);
+    }
 }
 
 // TODO: 用预编译BSP_USING_UART1
@@ -898,7 +929,23 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     USART_Cmd(USART1, ENABLE);
 
-    LOG_D("USART1 Init");
+    uart1_rev_sem = rt_sem_create("uart1_rev_sem", 0, RT_IPC_FLAG_FIFO);
+    if (uart1_rev_sem != RT_NULL)
+    {
+        rt_kprintf("uart1_rev_sem create\r\n");
+    }
+
+    uart1_rx_dma_thread = rt_thread_create("uart1_rx_dma_thread"
+                            , uart1_rx_dma_thread_entry
+                            , RT_NULL
+                            , 1024
+                            , 5
+                            , 20);
+    if (uart1_rx_dma_thread != RT_NULL)
+    {
+        rt_thread_startup(uart1_rx_dma_thread);
+        rt_kprintf("USART1 Init\r\n");
+    }
 }
 
 void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
@@ -1171,6 +1218,10 @@ void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
  */
 void DMA1_Channel2_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC2) != DISABLE)
     {
@@ -1181,6 +1232,10 @@ void DMA1_Channel2_IRQHandler(void)
     }
 
     /* Implement other events when needed */
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
 
 /**
@@ -1189,6 +1244,10 @@ void DMA1_Channel2_IRQHandler(void)
  */
 void DMA1_Channel3_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     /* Check half-transfer complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_HT3) != DISABLE)
     {
@@ -1203,6 +1262,10 @@ void DMA1_Channel3_IRQHandler(void)
     }
 
     /* Implement other events when needed */
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
 
 /**
@@ -1211,6 +1274,10 @@ void DMA1_Channel3_IRQHandler(void)
  */
 void DMA1_Channel4_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC4) != DISABLE)
     {
@@ -1221,6 +1288,38 @@ void DMA1_Channel4_IRQHandler(void)
     }
 
     /* Implement other events when needed */
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
+}
+
+//  DMA1 channel5 interrupt handler for UART1 RX
+void DMA1_Channel5_IRQHandler(void)
+{
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
+    /* Check half-transfer complete interrupt */
+    if(DMA_GetITStatus(DMA1_IT_HT5) != DISABLE)
+    {
+        DMA_ClearITPendingBit(DMA1_IT_HT5); /* Clear half-transfer complete flag */
+          USART1_RxCheck();                       /* Check data */
+        rt_sem_release(uart1_rev_sem);
+    }
+    /* Check transfer-complete interrupt */
+    if(DMA_GetITStatus(DMA1_IT_TC5) != DISABLE)
+    {
+        DMA_ClearITPendingBit(DMA1_IT_TC5); /* Clear transfer complete flag */
+          USART1_RxCheck();                       /* Check data */
+        rt_sem_release(uart1_rev_sem);
+    }
+    /* Implement other events when needed */
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
 
 /**
@@ -1229,6 +1328,10 @@ void DMA1_Channel4_IRQHandler(void)
  */
 void DMA1_Channel6_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     /* Check half-transfer complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_HT6) != DISABLE)
     {
@@ -1243,6 +1346,10 @@ void DMA1_Channel6_IRQHandler(void)
     }
 
     /* Implement other events when needed */
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
 
 /**
@@ -1251,6 +1358,10 @@ void DMA1_Channel6_IRQHandler(void)
  */
 void DMA1_Channel7_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC7) != DISABLE)
     {
@@ -1261,10 +1372,18 @@ void DMA1_Channel7_IRQHandler(void)
     }
 
     /* Implement other events when needed */
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
 
 void USART1_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     uint8_t temp = 0;
 
     if(USART_GetITStatus(USART1, USART_IT_PE) != RESET) //校验错误
@@ -1277,11 +1396,16 @@ void USART1_IRQHandler(void)
   	    temp = USART1->STATR;
         temp = USART1->DATAR;
 
-            USART1_RxCheck();
+          USART1_RxCheck();
+        rt_sem_release(uart1_rev_sem);
     }
     /* Implement other events when needed */
 
     temp &= 0;
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
 
 /**
@@ -1290,6 +1414,10 @@ void USART1_IRQHandler(void)
  */
 void USART2_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     uint8_t temp = 0;
 
     if(USART_GetITStatus(USART2, USART_IT_PE) != RESET)//校验错误
@@ -1308,10 +1436,18 @@ void USART2_IRQHandler(void)
     /* Implement other events when needed */
 
     temp &= 0;
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
 
 void USART3_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     uint8_t temp = 0;
 
     if(USART_GetITStatus(USART3, USART_IT_PE) != RESET)//校验错误
@@ -1329,6 +1465,10 @@ void USART3_IRQHandler(void)
     /* Implement other events when needed */
 
     temp &= 0;
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
 
 int rt_hw_usart_init(void)
