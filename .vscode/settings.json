@@ -10,6 +10,8 @@
         "serial.h": "c",
         "drv_log.h": "c",
         "rtdbg.h": "c",
-        "functional": "c"
+        "functional": "c",
+        "ch32v20x_it.h": "c",
+        "rtthread.h": "c"
     }
 }

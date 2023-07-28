@@ -825,7 +825,7 @@ static void uart2_rx_dma_thread_entry(void* parameter)
     while (1)
     {
         rt_sem_take(uart2_rx_check_sem, RT_WAITING_FOREVER);
-        LOG_D("USART2_RxCheck");
+        // LOG_D("USART2_RxCheck");
         USART2_RxCheck();
     }
 }

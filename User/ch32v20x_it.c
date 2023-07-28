@@ -6,12 +6,14 @@
  * Description        : Main Interrupt Service Routines.
 *********************************************************************************
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
-* Attention: This software (modified or not) and binary are used for 
+* Attention: This software (modified or not) and binary are used for
 * microcontroller manufactured by Nanjing Qinheng Microelectronics.
 *******************************************************************************/
 #include "ch32v20x_it.h"
 #include "board.h"
 #include <rtthread.h>
+
+// RTOS使用软件压栈
 void NMI_Handler(void) __attribute__((interrupt()));
 void HardFault_Handler(void) __attribute__((interrupt()));
 
@@ -42,10 +44,15 @@ void HardFault_Handler(void)
 {
     GET_INT_SP();
     rt_interrupt_enter();
+
     rt_kprintf(" hardfult\r\n");
+    rt_kprintf("mepc:%08x\r\n", __get_MEPC());
+    rt_kprintf("mcause:%08x\r\n", __get_MCAUSE());
+    rt_kprintf("mtval:%08x\r\n", __get_MTVAL());
+    while (1);
+
     rt_interrupt_leave();
     FREE_INT_SP();
-
 }
 
 
