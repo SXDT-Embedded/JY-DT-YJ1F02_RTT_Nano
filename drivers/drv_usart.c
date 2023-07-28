@@ -401,11 +401,14 @@ rt_sem_t uart1_rev_sem = RT_NULL;
 rt_sem_t uart2_rev_sem = RT_NULL;
 rt_sem_t uart3_rev_sem = RT_NULL;
 
+rt_sem_t uart2_revok_sem = RT_NULL;
+
 rt_sem_t uart1_rev_parity_sem = RT_NULL;
 rt_sem_t uart2_rev_parity_sem = RT_NULL;
 rt_sem_t uart3_rev_parity_sem = RT_NULL;
 
 static rt_thread_t uart1_rx_dma_thread = RT_NULL;
+static rt_thread_t uart2_rx_dma_thread = RT_NULL;
 
 // TODO: 换成信号量
 volatile uint8_t uart1_rev_parity_flag = 0; //  串口1接收数据奇偶校验的标志
@@ -799,6 +802,23 @@ static void uart1_rx_dma_thread_entry(void* parameter)
     }
 }
 
+static void uart2_rx_dma_thread_entry(void* parameter)
+{
+    rt_kprintf("uart2_rx_dma_thread_entry\r\n");
+
+    while (1)
+    {
+        rt_sem_take(uart2_rev_sem, RT_WAITING_FOREVER);
+        // if (rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER))
+        // {
+        //     USART1_RxCheck();
+        // }
+        LOG_D("uart2_rev_sem");
+        USART2_RxCheck();
+        // rt_thread_mdelay(10);
+    }
+}
+
 // TODO: 用预编译BSP_USING_UART1
 void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
 {
@@ -929,7 +949,7 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     USART_Cmd(USART1, ENABLE);
 
-    uart1_rev_sem = rt_sem_create("uart1_rev_sem", 0, RT_IPC_FLAG_FIFO);
+    uart1_rev_sem = rt_sem_create("uart1_rev_sem", 0, RT_IPC_FLAG_PRIO);
     if (uart1_rev_sem != RT_NULL)
     {
         rt_kprintf("uart1_rev_sem create\r\n");
@@ -1076,7 +1096,28 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     USART_Cmd(USART2, ENABLE);
 
-    LOG_D("USART2 Init");
+    uart2_rev_sem = rt_sem_create("uart2_rev_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart2_rev_sem != RT_NULL)
+    {
+        rt_kprintf("uart2_rev_sem create\r\n");
+    }
+    uart2_revok_sem = rt_sem_create("uart2_revok_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart2_revok_sem != RT_NULL)
+    {
+        rt_kprintf("uart2_revok_sem create\r\n");
+    }
+
+    uart2_rx_dma_thread = rt_thread_create("uart2_rx_dma_thread"
+                            , uart2_rx_dma_thread_entry
+                            , RT_NULL
+                            , 1024
+                            , 5
+                            , 20);
+    if (uart2_rx_dma_thread != RT_NULL)
+    {
+        rt_thread_startup(uart2_rx_dma_thread);
+        rt_kprintf("USART2 Init\r\n");
+    }
 }
 
 void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
@@ -1253,12 +1294,14 @@ void DMA1_Channel3_IRQHandler(void)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT3); /* Clear half-transfer complete flag */
         USART3_RxCheck();                       /* Check data */
+        rt_sem_release(uart3_rev_sem);
     }
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC3) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC3); /* Clear transfer complete flag */
         USART3_RxCheck();                       /* Check data */
+        rt_sem_release(uart3_rev_sem);
     }
 
     /* Implement other events when needed */
@@ -1337,12 +1380,14 @@ void DMA1_Channel6_IRQHandler(void)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT6); /* Clear half-transfer complete flag */
         USART2_RxCheck();                       /* Check data */
+        rt_sem_release(uart2_rev_sem);
     }
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC6) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC6); /* Clear transfer complete flag */
         USART2_RxCheck();                       /* Check data */
+        rt_sem_release(uart2_rev_sem);
     }
 
     /* Implement other events when needed */
@@ -1396,7 +1441,7 @@ void USART1_IRQHandler(void)
   	    temp = USART1->STATR;
         temp = USART1->DATAR;
 
-          USART1_RxCheck();
+        USART1_RxCheck();
         rt_sem_release(uart1_rev_sem);
     }
     /* Implement other events when needed */
@@ -1432,6 +1477,8 @@ void USART2_IRQHandler(void)
 
             USART2_RxCheck();
         uart2_rev_flag = 1; //检测到空闲状态，置位接收完成位
+        rt_sem_release(uart2_rev_sem);
+        rt_sem_release(uart2_revok_sem);
     }
     /* Implement other events when needed */
 
@@ -1461,6 +1508,7 @@ void USART3_IRQHandler(void)
         temp = USART3->DATAR;
 
         USART3_RxCheck();
+        rt_sem_release(uart3_rev_sem);
     }
     /* Implement other events when needed */
 

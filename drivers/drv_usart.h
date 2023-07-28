@@ -97,8 +97,13 @@ extern volatile uint8_t uart1_rev_flag; //  串口2接收到数据待解析的
 extern lwrb_t usart2_rx_rb;
 extern volatile uint8_t uart2_rev_flag; //  串口2接收到数据待解析的
 
+extern rt_sem_t uart2_revok_sem;
+
 extern lwrb_t usart3_rx_rb;
 extern volatile uint8_t uart3_rev_flag; //  串口2接收到数据待解析的
+
+
+
 
 // 阻塞式发送的
 void USART_SendByte(USART_TypeDef *pUSARTx, const uint16_t data);
