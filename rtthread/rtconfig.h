@@ -28,6 +28,8 @@
 #define ULOG_OUTPUT_TAG
 /* end of log format */
 #define ULOG_BACKEND_USING_CONSOLE
+
+#define ULOG_USING_ISR_LOG
 /* end of Utilities */
 
 //基础配置
@@ -62,9 +64,9 @@
 
 //内核调试功能配置
 //定义 RT_DEBUG 宏则开启 debug 模式。若开启系统调试，则在实现打印之后可以打印系统 LOG 日志。请在代码开发与调试过程中打开该项，帮助调试定位问题，在代码发布时关闭该项。
-//#define RT_DEBUG                 // 关闭 debug
-#define RT_DEBUG_INIT 0            // 启用组件初始化调试配置，设置为 1 则会打印自动初始化的函数名称
-//#define RT_USING_OVERFLOW_CHECK  // 关闭栈溢出检查
+// #define RT_DEBUG                    // 关闭 debug
+#define RT_DEBUG_INIT 1            // 启用组件初始化调试配置，设置为 1 则会打印自动初始化的函数名称
+// #define RT_USING_OVERFLOW_CHECK     // 关闭栈溢出检查
 
 
 //钩子函数配置

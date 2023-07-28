@@ -422,7 +422,7 @@ volatile uint8_t uart3_rev_flag = 0; //  串口3接收到数据待解析的标�
 void USART1_IRQHandler(void) __attribute__((interrupt()));
 void USART2_IRQHandler(void) __attribute__((interrupt()));
 void USART3_IRQHandler(void) __attribute__((interrupt()));
-void UART4_IRQHandler(void) __attribute__((interrupt()));
+//void UART4_IRQHandler(void) __attribute__((interrupt()));
 
 // USART1 - TX
 void DMA1_Channel4_IRQHandler(void) __attribute__((interrupt()));
@@ -649,6 +649,11 @@ uint8_t USART2_StartTxDMATransfer(void)
         /* Disable channel if enabled */
         DMA_Cmd(USART2_DMA_TX_CHANNEL, DISABLE);
 
+        /* Limit maximal size to transmit at a time */
+        if (usart2_tx_dma_current_len > 32) {
+            usart2_tx_dma_current_len = 32;
+        }
+
         /* Clear all flags */
         DMA_ClearFlag(DMA1_FLAG_TC7);
         DMA_ClearFlag(DMA1_FLAG_HT7);
@@ -762,8 +767,11 @@ void USART2_SendString(const char* str)
  */
 void USART2_SendArray(const void* data, size_t len)
 {
-    lwrb_write(&usart2_tx_rb, data, len); /* Write data to TX buffer for loopback */
-    USART2_StartTxDMATransfer();              /* Then try to start transfer */
+    if (lwrb_get_free(&usart2_tx_rb) >= len)
+    {
+        lwrb_write(&usart2_tx_rb, data, len); /* Write data to TX buffer for loopback */
+        USART2_StartTxDMATransfer();              /* Then try to start transfer */
+    }
 }
 
 void USART3_SendString(const char* str)
@@ -804,18 +812,18 @@ static void uart1_rx_dma_thread_entry(void* parameter)
 
 static void uart2_rx_dma_thread_entry(void* parameter)
 {
-    rt_kprintf("uart2_rx_dma_thread_entry\r\n");
+    LOG_D("uart2_rx_dma_thread_entry\r\n");
 
     while (1)
     {
         rt_sem_take(uart2_rev_sem, RT_WAITING_FOREVER);
+        LOG_D("uart2_rev_sem");
         // if (rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER))
         // {
         //     USART1_RxCheck();
         // }
-        LOG_D("uart2_rev_sem");
+        // LOG_D("uart2_rev_sem = %d", rt_sem_take(uart2_rev_sem, 1));
         USART2_RxCheck();
-        // rt_thread_mdelay(10);
     }
 }
 
@@ -960,10 +968,11 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
                             , RT_NULL
                             , 1024
                             , 5
-                            , 20);
+                            , 5);
     if (uart1_rx_dma_thread != RT_NULL)
     {
-        rt_thread_startup(uart1_rx_dma_thread);
+        LOG_D("rt_thread_startup(uart1_rx_dma_thread) = %d"
+            , rt_thread_startup(uart1_rx_dma_thread));
         rt_kprintf("USART1 Init\r\n");
     }
 }
@@ -1099,23 +1108,24 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
     uart2_rev_sem = rt_sem_create("uart2_rev_sem", 0, RT_IPC_FLAG_PRIO);
     if (uart2_rev_sem != RT_NULL)
     {
-        rt_kprintf("uart2_rev_sem create\r\n");
+        LOG_D("uart2_rev_sem create\r\n");
     }
     uart2_revok_sem = rt_sem_create("uart2_revok_sem", 0, RT_IPC_FLAG_PRIO);
     if (uart2_revok_sem != RT_NULL)
     {
-        rt_kprintf("uart2_revok_sem create\r\n");
+        LOG_D("uart2_revok_sem create\r\n");
     }
 
     uart2_rx_dma_thread = rt_thread_create("uart2_rx_dma_thread"
                             , uart2_rx_dma_thread_entry
                             , RT_NULL
                             , 1024
-                            , 5
-                            , 20);
+                            , 3
+                            , 5);
     if (uart2_rx_dma_thread != RT_NULL)
     {
-        rt_thread_startup(uart2_rx_dma_thread);
+        LOG_D("rt_thread_startup(uart2_rx_dma_thread) = %d"
+            , rt_thread_startup(uart2_rx_dma_thread));
         rt_kprintf("USART2 Init\r\n");
     }
 }
@@ -1348,14 +1358,14 @@ void DMA1_Channel5_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_HT5) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT5); /* Clear half-transfer complete flag */
-          USART1_RxCheck();                       /* Check data */
+        USART1_RxCheck();                       /* Check data */
         rt_sem_release(uart1_rev_sem);
     }
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC5) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC5); /* Clear transfer complete flag */
-          USART1_RxCheck();                       /* Check data */
+        USART1_RxCheck();                       /* Check data */
         rt_sem_release(uart1_rev_sem);
     }
     /* Implement other events when needed */
@@ -1379,14 +1389,17 @@ void DMA1_Channel6_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_HT6) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT6); /* Clear half-transfer complete flag */
-        USART2_RxCheck();                       /* Check data */
+        // USART2_RxCheck();                       /* Check data */
+
+        LOG_D("DMA1_IT_HT6");
         rt_sem_release(uart2_rev_sem);
     }
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC6) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC6); /* Clear transfer complete flag */
-        USART2_RxCheck();                       /* Check data */
+        // USART2_RxCheck();                       /* Check data */
+        LOG_D("DMA1_IT_TC6");
         rt_sem_release(uart2_rev_sem);
     }
 
@@ -1475,7 +1488,7 @@ void USART2_IRQHandler(void)
   	    temp = USART2->STATR;
         temp = USART2->DATAR;
 
-            USART2_RxCheck();
+            // USART2_RxCheck();
         uart2_rev_flag = 1; //检测到空闲状态，置位接收完成位
         rt_sem_release(uart2_rev_sem);
         rt_sem_release(uart2_revok_sem);
@@ -1522,8 +1535,8 @@ void USART3_IRQHandler(void)
 int rt_hw_usart_init(void)
 {
     USART1_Init(115200, kCheck0Stop1);
-    USART2_Init(115200, kCheck0Stop1);
-    USART3_Init(115200, kCheck0Stop1);
+    // USART2_Init(115200, kCheck0Stop1);
+    // USART3_Init(115200, kCheck0Stop1);
 
     return 0;
 }
