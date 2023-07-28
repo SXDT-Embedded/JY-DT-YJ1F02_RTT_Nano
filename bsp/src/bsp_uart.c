@@ -1,9 +1,9 @@
 #include "bsp_uart.h"
 #include "drv_usart.h"
 
-#define DBG_TAG     "bsp_uart"
-#define DBG_LVL     DBG_LOG
-#include <rtdbg.h>
+#define LOG_TAG     "bsp_uart"
+#define LOG_LVL     LOG_LVL_DBG
+#include <ulog.h>
 
 static rt_thread_t u2_rx_thread = RT_NULL;
 
@@ -24,15 +24,15 @@ static void u2_rx_thread_entry(void* parameter)
         // {
         //     USART1_RxCheck();
         // }
-        LOG_D("uart2_revok_sem");
+//        LOG_D("uart2_revok_sem");
         // USART2_RxCheck();
         // rt_thread_mdelay(10);
 
         uint8_t buf[256];
         uint8_t buf_len = lwrb_get_full(&usart2_rx_rb);
         lwrb_read(&usart2_rx_rb, buf, buf_len);
-
-        LOG_D("%s", buf);
+        USART2_SendArray(buf, buf_len);
+//        LOG_HEX("buf", 16, buf, buf_len);
     }
 }
 
@@ -42,7 +42,7 @@ static int u2_init()
                             , u2_rx_thread_entry
                             , RT_NULL
                             , 1024
-                            , 5
+                            , 4
                             , 20);
     if (u2_rx_thread != RT_NULL)
     {
