@@ -1,6 +1,7 @@
 #include "bsp_uart.h"
 #include "drv_usart.h"
 
+#define DBG_TAG     "bsp_uart"
 #define LOG_TAG     "bsp_uart"
 #define LOG_LVL     LOG_LVL_DBG
 #include <ulog.h>
@@ -17,13 +18,10 @@ static void u2_rx_thread_entry(void* parameter)
 {
     rt_kprintf("u2_rx_thread_entry\r\n");
 
-    USART2_Init(115200, kCheck0Stop1);
-    USART3_Init(115200, kCheck0Stop1);
-
     while (1)
     {
         rt_sem_take(uart2_revok_sem, RT_WAITING_FOREVER);
-        // if (rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER))
+        // if (rt_sem_take(uart1_rx_check_sem, RT_WAITING_FOREVER))
         // {
         //     USART1_RxCheck();
         // }
@@ -39,24 +37,18 @@ static void u2_rx_thread_entry(void* parameter)
     }
 }
 
-// static int u2_init0()
-// {
-//      USART2_Init(115200, kCheck0Stop1);
-// }
-// INIT_DEVICE_EXPORT(u2_init0);
-
 static int u2_init()
 {
     u2_rx_thread = rt_thread_create("u2_rx_thread"
                             , u2_rx_thread_entry
                             , RT_NULL
-                            , 2048
+                            , 512
                             , 4
                             , 20);
     if (u2_rx_thread != RT_NULL)
     {
         rt_thread_startup(u2_rx_thread);
-        rt_kprintf("u2_init\r\n");
+        LOG_D("u2_init");
         return RT_EOK;
     }
 

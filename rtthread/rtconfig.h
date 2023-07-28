@@ -9,10 +9,10 @@
 //当系统加入 FinSH 组件源码后，需要在 rtconfig.h 中开启以下项
 #include "finsh_config.h"
 
-#define RT_DEBUG
-#define RT_DEBUG_COLOR
-// 使用了 rtdbg log打印
-#define DBG_ENABLE
+// #define RT_DEBUG
+// #define RT_DEBUG_COLOR
+// // 使用了 rtdbg log打印
+// #define DBG_ENABLE
 
 /* Utilities */
 #define RT_USING_ULOG
@@ -50,7 +50,7 @@
 // <o>the max length of object name<2-16>
 //  <i>Default: 8
 //4、设置对象名称的最大长度，默认 8 个字符，一般无需修改。
-#define RT_NAME_MAX    8
+#define RT_NAME_MAX    16
 // <c1>Using RT-Thread components initialization
 //  <i>Using RT-Thread components initialization
 //5、设置使用组件自动初始化功能，默认需要使用，开启该宏则可以使用自动初始化功能。
@@ -60,13 +60,13 @@
 #define RT_USING_USER_MAIN
 // <o>the stack size of main thread<1-4086>
 //  <i>Default: 512
-#define RT_MAIN_THREAD_STACK_SIZE     512
+#define RT_MAIN_THREAD_STACK_SIZE     640
 
 //内核调试功能配置
 //定义 RT_DEBUG 宏则开启 debug 模式。若开启系统调试，则在实现打印之后可以打印系统 LOG 日志。请在代码开发与调试过程中打开该项，帮助调试定位问题，在代码发布时关闭该项。
 // #define RT_DEBUG                    // 关闭 debug
-#define RT_DEBUG_INIT 1            // 启用组件初始化调试配置，设置为 1 则会打印自动初始化的函数名称
-// #define RT_USING_OVERFLOW_CHECK     // 关闭栈溢出检查
+// #define RT_DEBUG_INIT 1            // 启用组件初始化调试配置，设置为 1 则会打印自动初始化的函数名称
+#define RT_USING_OVERFLOW_CHECK     // 关闭栈溢出检查
 
 
 //钩子函数配置
@@ -88,7 +88,7 @@
 #define RT_USING_SEMAPHORE       // 设置是否使用 信号量，默认打开
 #define RT_USING_MUTEX           // 设置是否使用 互斥量
 #define RT_USING_EVENT           // 设置是否使用 事件集
-#define RT_USING_MAILBOX         // 设置是否使用  邮箱
+#define RT_USING_MAILBOX         // 设置是否使用 邮箱
 #define RT_USING_MESSAGEQUEUE    // 设置是否使用 消息队列
 
 //内存配置
@@ -113,7 +113,6 @@
 
 #define BSP_USING_UART
 #define BSP_USING_UART1
-#define BSP_UART1_FIFO_SIZE 10
 
 /* end of On-chip Peripheral Drivers */
 

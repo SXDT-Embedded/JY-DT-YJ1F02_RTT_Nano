@@ -397,11 +397,13 @@ volatile size_t usart1_tx_dma_current_len;
 volatile size_t usart2_tx_dma_current_len;
 volatile size_t usart3_tx_dma_current_len;
 
-rt_sem_t uart1_rev_sem = RT_NULL;
-rt_sem_t uart2_rev_sem = RT_NULL;
-rt_sem_t uart3_rev_sem = RT_NULL;
+rt_sem_t uart1_rx_check_sem = RT_NULL;
+rt_sem_t uart2_rx_check_sem = RT_NULL;
+rt_sem_t uart3_rx_check_sem = RT_NULL;
 
+rt_sem_t uart1_revok_sem = RT_NULL;
 rt_sem_t uart2_revok_sem = RT_NULL;
+rt_sem_t uart3_revok_sem = RT_NULL;
 
 rt_sem_t uart1_rev_parity_sem = RT_NULL;
 rt_sem_t uart2_rev_parity_sem = RT_NULL;
@@ -409,15 +411,15 @@ rt_sem_t uart3_rev_parity_sem = RT_NULL;
 
 static rt_thread_t uart1_rx_dma_thread = RT_NULL;
 static rt_thread_t uart2_rx_dma_thread = RT_NULL;
+static rt_thread_t uart3_rx_dma_thread = RT_NULL;
 
-// TODO: 换成信号量
-volatile uint8_t uart1_rev_parity_flag = 0; //  串口1接收数据奇偶校验的标志
-volatile uint8_t uart2_rev_parity_flag = 0; //  串口2接收数据奇偶校验的标志
-volatile uint8_t uart3_rev_parity_flag = 0; //  串口3接收数据奇偶校验的标志
+// volatile uint8_t uart1_rev_parity_flag = 0; //  串口1接收数据奇偶校验的标志
+// volatile uint8_t uart2_rev_parity_flag = 0; //  串口2接收数据奇偶校验的标志
+// volatile uint8_t uart3_rev_parity_flag = 0; //  串口3接收数据奇偶校验的标志
 
-volatile uint8_t uart1_rev_flag = 0; //  串口2接收到数据待解析的标志
-volatile uint8_t uart2_rev_flag = 0; //  串口2接收到数据待解析的标志
-volatile uint8_t uart3_rev_flag = 0; //  串口3接收到数据待解析的标志
+// volatile uint8_t uart1_rev_flag = 0; //  串口2接收到数据待解析的标志
+// volatile uint8_t uart2_rev_flag = 0; //  串口2接收到数据待解析的标志
+// volatile uint8_t uart3_rev_flag = 0; //  串口3接收到数据待解析的标志
 
 void USART1_IRQHandler(void) __attribute__((interrupt()));
 void USART2_IRQHandler(void) __attribute__((interrupt()));
@@ -488,6 +490,7 @@ void USART1_RxCheck(void)
     size_t pos;
 
     // if(uart1_rev_parity_flag == 0)
+    if (RT_EOK != rt_sem_trytake(uart1_rev_parity_sem))
     {
         /* Calculate current position in buffer and check for new data available */
         pos = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - DMA_GetCurrDataCounter(USART1_DMA_RX_CHANNEL);
@@ -511,12 +514,13 @@ void USART1_RxCheck(void)
             old_pos = pos;  /* Save current position as old for next transfers */
         }
     }
-    // else
-    // {
-    //     pos = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - DMA_GetCurrDataCounter(USART1_DMA_RX_CHANNEL);
-    //     old_pos = pos;  /* Save current position as old for next transfers */
-    //     uart1_rev_parity_flag = 0;
-    // }
+    // TODO: 校验错误后的处理
+    else
+    {
+        pos = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - DMA_GetCurrDataCounter(USART1_DMA_RX_CHANNEL);
+        old_pos = pos;  /* Save current position as old for next transfers */
+        // uart1_rev_parity_flag = 0;
+    }
 }
 
 void USART2_RxCheck(void)
@@ -524,7 +528,8 @@ void USART2_RxCheck(void)
     static size_t old_pos;
     size_t pos;
 
-    if(uart2_rev_parity_flag == 0)
+    if (RT_EOK != rt_sem_trytake(uart2_rev_parity_sem))
+    // if(uart2_rev_parity_flag == 0)
     {
         /* Calculate current position in buffer and check for new data available */
         pos = LWUTIL_ARRAYSIZE(usart2_rx_dma_buffer) - DMA_GetCurrDataCounter(USART2_DMA_RX_CHANNEL);
@@ -548,11 +553,12 @@ void USART2_RxCheck(void)
             old_pos = pos;  /* Save current position as old for next transfers */
         }
     }
+    // TODO: 校验错误后的处理
     else
     {
         pos = LWUTIL_ARRAYSIZE(usart2_rx_dma_buffer) - DMA_GetCurrDataCounter(USART2_DMA_RX_CHANNEL);
         old_pos = pos;  /* Save current position as old for next transfers */
-        uart2_rev_parity_flag = 0;
+        // uart2_rev_parity_flag = 0;
     }
 }
 
@@ -561,7 +567,8 @@ void USART3_RxCheck(void)
     static size_t old_pos;
     size_t pos;
 
-    if(uart3_rev_parity_flag == 0)
+    // if(uart3_rev_parity_flag == 0)
+    if (RT_EOK != rt_sem_trytake(uart3_rev_parity_sem))
     {
         /* Calculate current position in buffer and check for new data available */
         pos = LWUTIL_ARRAYSIZE(usart3_rx_dma_buffer) - DMA_GetCurrDataCounter(USART3_DMA_RX_CHANNEL);
@@ -585,11 +592,12 @@ void USART3_RxCheck(void)
             old_pos = pos;  /* Save current position as old for next transfers */
         }
     }
+    // TODO: 校验错误后的处理
     else
     {
         pos = LWUTIL_ARRAYSIZE(usart3_rx_dma_buffer) - DMA_GetCurrDataCounter(USART3_DMA_RX_CHANNEL);
         old_pos = pos;  /* Save current position as old for next transfers */
-        uart3_rev_parity_flag = 0;
+        // uart3_rev_parity_flag = 0;
     }
 }
 
@@ -711,7 +719,7 @@ uint8_t USART3_StartTxDMATransfer(void)
 void USART1_ProcessData(const void* data, size_t len)
 {
     lwrb_write(&usart1_rx_rb, data, len);  /* Write data to receive buffer */
-    // rt_sem_release(uart1_rev_sem);
+    // rt_sem_release(uart1_rx_check_sem);
 //    LOG_D("USART1_ProcessData");
 }
 
@@ -799,12 +807,12 @@ static void uart1_rx_dma_thread_entry(void* parameter)
 
     while (1)
     {
-        rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER);
-        // if (rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER))
+        rt_sem_take(uart1_rx_check_sem, RT_WAITING_FOREVER);
+        // if (rt_sem_take(uart1_rx_check_sem, RT_WAITING_FOREVER))
         // {
         //     USART1_RxCheck();
         // }
-        LOG_D("uart1_rev_sem");
+        // LOG_D("uart1_rx_check_sem");
         USART1_RxCheck();
         // rt_thread_mdelay(10);
     }
@@ -816,14 +824,21 @@ static void uart2_rx_dma_thread_entry(void* parameter)
 
     while (1)
     {
-        rt_sem_take(uart2_rev_sem, RT_WAITING_FOREVER);
-        LOG_D("uart2_rev_sem");
-        // if (rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER))
-        // {
-        //     USART1_RxCheck();
-        // }
-        // LOG_D("uart2_rev_sem = %d", rt_sem_take(uart2_rev_sem, 1));
+        rt_sem_take(uart2_rx_check_sem, RT_WAITING_FOREVER);
+        LOG_D("USART2_RxCheck");
         USART2_RxCheck();
+    }
+}
+
+static void uart3_rx_dma_thread_entry(void* parameter)
+{
+    LOG_D("uart3_rx_dma_thread_entry\r\n");
+
+    while (1)
+    {
+        rt_sem_take(uart3_rx_check_sem, RT_WAITING_FOREVER);
+        LOG_D("uart3_rx_check_sem");
+        USART3_RxCheck();
     }
 }
 
@@ -956,26 +971,45 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_Cmd(USART1_DMA_TX_CHANNEL, DISABLE);
 
     USART_Cmd(USART1, ENABLE);
+    LOG_D("USART1 Init\r\n");
+}
 
-    uart1_rev_sem = rt_sem_create("uart1_rev_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart1_rev_sem != RT_NULL)
+static int UART1_SemCreate(void)
+{
+    uart1_rev_parity_sem = rt_sem_create("uart1_rev_parity_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart1_rev_parity_sem != RT_NULL)
     {
-        rt_kprintf("uart1_rev_sem create\r\n");
+        LOG_D("uart1_rev_parity_sem create");
+    }
+
+    uart1_rx_check_sem = rt_sem_create("uart1_rx_check_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart1_rx_check_sem != RT_NULL)
+    {
+        LOG_D("uart1_rx_check_sem create");
+    }
+    // RT_ASSERT(uart1_rx_check_sem != RT_NULL);
+
+    uart1_revok_sem = rt_sem_create("uart1_revok_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart1_revok_sem != RT_NULL)
+    {
+        LOG_D("uart1_revok_sem create");
     }
 
     uart1_rx_dma_thread = rt_thread_create("uart1_rx_dma_thread"
                             , uart1_rx_dma_thread_entry
                             , RT_NULL
-                            , 1024
+                            , 512
                             , 5
                             , 5);
     if (uart1_rx_dma_thread != RT_NULL)
     {
         LOG_D("rt_thread_startup(uart1_rx_dma_thread) = %d"
             , rt_thread_startup(uart1_rx_dma_thread));
-        rt_kprintf("USART1 Init\r\n");
     }
+
+    return 0;
 }
+INIT_PREV_EXPORT(UART1_SemCreate);
 
 void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
 {
@@ -1105,10 +1139,21 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     USART_Cmd(USART2, ENABLE);
 
-    uart2_rev_sem = rt_sem_create("uart2_rev_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart2_rev_sem != RT_NULL)
+    LOG_D("USART2 Init");
+}
+
+static int UART2_SemCreate(void)
+{
+    uart2_rev_parity_sem = rt_sem_create("uart2_rev_parity_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart2_rev_parity_sem != RT_NULL)
     {
-        LOG_D("uart2_rev_sem create\r\n");
+        LOG_D("uart2_rev_parity_sem create");
+    }
+
+    uart2_rx_check_sem = rt_sem_create("uart2_rx_check_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart2_rx_check_sem != RT_NULL)
+    {
+        LOG_D("uart2_rx_check_sem create\r\n");
     }
     uart2_revok_sem = rt_sem_create("uart2_revok_sem", 0, RT_IPC_FLAG_PRIO);
     if (uart2_revok_sem != RT_NULL)
@@ -1119,16 +1164,18 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
     uart2_rx_dma_thread = rt_thread_create("uart2_rx_dma_thread"
                             , uart2_rx_dma_thread_entry
                             , RT_NULL
-                            , 1024
+                            , 512
                             , 3
                             , 5);
     if (uart2_rx_dma_thread != RT_NULL)
     {
         LOG_D("rt_thread_startup(uart2_rx_dma_thread) = %d"
             , rt_thread_startup(uart2_rx_dma_thread));
-        rt_kprintf("USART2 Init\r\n");
     }
+
+    return 0;
 }
+INIT_PREV_EXPORT(UART2_SemCreate);
 
 void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
 {
@@ -1263,6 +1310,41 @@ void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
     LOG_D("USART3 Init");
 }
 
+static int UART3_SemCreate(void)
+{
+    uart3_rev_parity_sem = rt_sem_create("uart3_rev_parity_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart3_rev_parity_sem != RT_NULL)
+    {
+        LOG_D("uart3_rev_parity_sem create");
+    }
+
+    uart3_rx_check_sem = rt_sem_create("uart3_rx_check_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart3_rx_check_sem != RT_NULL)
+    {
+        LOG_D("uart3_rx_check_sem create\r\n");
+    }
+    uart3_revok_sem = rt_sem_create("uart3_revok_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart3_revok_sem != RT_NULL)
+    {
+        LOG_D("uart3_revok_sem create\r\n");
+    }
+
+    uart3_rx_dma_thread = rt_thread_create("uart3_rx_dma_thread"
+                            , uart3_rx_dma_thread_entry
+                            , RT_NULL
+                            , 512
+                            , 3
+                            , 5);
+    if (uart3_rx_dma_thread != RT_NULL)
+    {
+        LOG_D("rt_thread_startup(uart3_rx_dma_thread) = %d"
+            , rt_thread_startup(uart3_rx_dma_thread));
+    }
+
+    return 0;
+}
+INIT_PREV_EXPORT(UART3_SemCreate);
+
 /**
  * @description: DMA1 channel2 interrupt handler for UART3 TX
  * @return {*}
@@ -1303,15 +1385,17 @@ void DMA1_Channel3_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_HT3) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT3); /* Clear half-transfer complete flag */
-        USART3_RxCheck();                       /* Check data */
-        rt_sem_release(uart3_rev_sem);
+        // USART3_RxCheck();                       /* Check data */
+        // LOG_D("DMA1_IT_HT3");
+        rt_sem_release(uart3_rx_check_sem);
     }
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC3) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC3); /* Clear transfer complete flag */
-        USART3_RxCheck();                       /* Check data */
-        rt_sem_release(uart3_rev_sem);
+        // USART3_RxCheck();                       /* Check data */
+        // LOG_D("DMA1_IT_TC3");
+        rt_sem_release(uart3_rx_check_sem);
     }
 
     /* Implement other events when needed */
@@ -1358,15 +1442,17 @@ void DMA1_Channel5_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_HT5) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT5); /* Clear half-transfer complete flag */
-        USART1_RxCheck();                       /* Check data */
-        rt_sem_release(uart1_rev_sem);
+        // USART1_RxCheck();                       /* Check data */
+        rt_sem_release(uart1_rx_check_sem);
+        // LOG_D("DMA1_IT_HT5");
     }
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC5) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC5); /* Clear transfer complete flag */
-        USART1_RxCheck();                       /* Check data */
-        rt_sem_release(uart1_rev_sem);
+        // USART1_RxCheck();                       /* Check data */
+        rt_sem_release(uart1_rx_check_sem);
+        // LOG_D("DMA1_IT_TC5");
     }
     /* Implement other events when needed */
 
@@ -1390,17 +1476,16 @@ void DMA1_Channel6_IRQHandler(void)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT6); /* Clear half-transfer complete flag */
         // USART2_RxCheck();                       /* Check data */
-
-        LOG_D("DMA1_IT_HT6");
-        rt_sem_release(uart2_rev_sem);
+        // LOG_D("DMA1_IT_HT6");
+        rt_sem_release(uart2_rx_check_sem);
     }
     /* Check transfer-complete interrupt */
     if(DMA_GetITStatus(DMA1_IT_TC6) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC6); /* Clear transfer complete flag */
         // USART2_RxCheck();                       /* Check data */
-        LOG_D("DMA1_IT_TC6");
-        rt_sem_release(uart2_rev_sem);
+        // LOG_D("DMA1_IT_TC6");
+        rt_sem_release(uart2_rx_check_sem);
     }
 
     /* Implement other events when needed */
@@ -1446,7 +1531,8 @@ void USART1_IRQHandler(void)
 
     if(USART_GetITStatus(USART1, USART_IT_PE) != RESET) //校验错误
     {
-        uart1_rev_parity_flag = 1;
+        // uart1_rev_parity_flag = 1;
+        rt_sem_release(uart1_rev_parity_sem);
     }
     if(USART_GetITStatus(USART1, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
     {
@@ -1454,8 +1540,9 @@ void USART1_IRQHandler(void)
   	    temp = USART1->STATR;
         temp = USART1->DATAR;
 
-        USART1_RxCheck();
-        rt_sem_release(uart1_rev_sem);
+        // USART1_RxCheck();
+        rt_sem_release(uart1_rx_check_sem);
+        rt_sem_release(uart1_revok_sem);
     }
     /* Implement other events when needed */
 
@@ -1480,7 +1567,8 @@ void USART2_IRQHandler(void)
 
     if(USART_GetITStatus(USART2, USART_IT_PE) != RESET)//校验错误
     {
-        uart2_rev_parity_flag = 1;
+        // uart2_rev_parity_flag = 1;
+        rt_sem_release(uart2_rev_parity_sem);
     }
     if(USART_GetITStatus(USART2, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
     {
@@ -1489,8 +1577,9 @@ void USART2_IRQHandler(void)
         temp = USART2->DATAR;
 
             // USART2_RxCheck();
-        uart2_rev_flag = 1; //检测到空闲状态，置位接收完成位
-        rt_sem_release(uart2_rev_sem);
+        // uart2_rev_flag = 1; //检测到空闲状态，置位接收完成位
+        // LOG_D("USART2_IRQHandler");
+        rt_sem_release(uart2_rx_check_sem);
         rt_sem_release(uart2_revok_sem);
     }
     /* Implement other events when needed */
@@ -1512,7 +1601,8 @@ void USART3_IRQHandler(void)
 
     if(USART_GetITStatus(USART3, USART_IT_PE) != RESET)//校验错误
     {
-        uart3_rev_parity_flag = 1; //校验错误
+        // uart3_rev_parity_flag = 1; //校验错误
+        rt_sem_release(uart3_rev_parity_sem);
     }
     if(USART_GetITStatus(USART3, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
     {
@@ -1520,8 +1610,9 @@ void USART3_IRQHandler(void)
   	    temp = USART3->STATR;
         temp = USART3->DATAR;
 
-        USART3_RxCheck();
-        rt_sem_release(uart3_rev_sem);
+        // USART3_RxCheck();
+        rt_sem_release(uart3_rx_check_sem);
+        rt_sem_release(uart3_revok_sem);
     }
     /* Implement other events when needed */
 
@@ -1535,13 +1626,59 @@ void USART3_IRQHandler(void)
 int rt_hw_usart_init(void)
 {
     USART1_Init(115200, kCheck0Stop1);
-    // USART2_Init(115200, kCheck0Stop1);
-    // USART3_Init(115200, kCheck0Stop1);
+    USART2_Init(115200, kCheck0Stop1);
+    USART3_Init(115200, kCheck0Stop1);
 
     return 0;
 }
 
+/* 移植控制台，实现控制台输出, 对接 rt_hw_console_output */
+void rt_hw_console_output(const char *str)
+{
+    rt_size_t i = 0, size = 0, j = 0;
+    char a = '\r';
 
+    size = rt_strlen(str);
+    rt_uint8_t buf[size * 2];
+
+    for (i = 0; i < size; i++, j++)
+    {
+        if (*(str + i) == '\n')
+        {
+            // USART1_SendArray(&a, 1);
+            buf[j] = a;
+            j++;
+        }
+        // USART1_SendArray((str + i), 1);
+        buf[j] = str[i];
+    }
+
+    USART1_SendArray(buf, j);
+}
+
+// extern rt_sem_t uart1_rx_check_sem;
+
+/* 移植 FinSH，实现命令行交互, 需要添加 FinSH 源码，然后再对接 rt_hw_console_getchar */
+/* 中断方式 */
+char rt_hw_console_getchar(void)
+{
+    char ch = 0;
+
+    // /* 从 ringbuffer 中拿出数据 */
+    // while (rt_ringbuffer_getchar(&uart_rxcb, (rt_uint8_t *)&ch) != 1)
+    // {
+    //     rt_sem_take(&shell_rx_sem, RT_WAITING_FOREVER);
+    // }
+
+    // while (lwrb_read(&usart1_rx_rb, &ch, 1) != 1)
+    // {
+    //     rt_sem_take(uart1_rx_check_sem, RT_WAITING_FOREVER);
+    // }
+
+    lwrb_read(&usart1_rx_rb, &ch, 1);
+
+    return ch;
+}
 
 
 #endif /* RT_USING_SERIAL */

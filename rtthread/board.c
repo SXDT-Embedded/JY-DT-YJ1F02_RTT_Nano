@@ -99,7 +99,8 @@ void rt_hw_board_init(void)
     rt_hw_usart_init();
 // #endif
 
-#ifdef RT_USING_CONSOLE
+    /* Set the shell console output device */
+#if defined(RT_USING_DEVICE) && defined(RT_USING_CONSOLE)
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
 #endif
 
@@ -107,8 +108,6 @@ void rt_hw_board_init(void)
 #ifdef RT_USING_COMPONENTS_INIT
     rt_components_board_init();
 #endif
-
-
 }
 
 void SysTick_Handler(void) __attribute__((interrupt()));

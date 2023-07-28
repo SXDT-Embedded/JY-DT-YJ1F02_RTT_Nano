@@ -34,8 +34,9 @@ char rt_hw_console_getchar(void)
     return ch;
 }
 #else // RT_USING_SERIAL
+// 写到 drv_usart.c了
 /* 移植控制台，实现控制台输出, 对接 rt_hw_console_output */
-void rt_hw_console_output(const char *str)
+RT_WEAK void rt_hw_console_output(const char *str)
 {
 
     rt_size_t i = 0, size = 0, j = 0;
@@ -59,11 +60,11 @@ void rt_hw_console_output(const char *str)
     USART1_SendArray(buf, j);
 }
 
-// extern rt_sem_t uart1_rev_sem;
+// extern rt_sem_t uart1_rx_check_sem;
 
 /* 移植 FinSH，实现命令行交互, 需要添加 FinSH 源码，然后再对接 rt_hw_console_getchar */
 /* 中断方式 */
-char rt_hw_console_getchar(void)
+RT_WEAK char rt_hw_console_getchar(void)
 {
     char ch = 0;
 
@@ -75,7 +76,7 @@ char rt_hw_console_getchar(void)
 
     // while (lwrb_read(&usart1_rx_rb, &ch, 1) != 1)
     // {
-    //     rt_sem_take(uart1_rev_sem, RT_WAITING_FOREVER);
+    //     rt_sem_take(uart1_rx_check_sem, RT_WAITING_FOREVER);
     // }
 
     lwrb_read(&usart1_rx_rb, &ch, 1);
