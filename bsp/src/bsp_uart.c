@@ -18,7 +18,7 @@ void u2_send(void)
 MSH_CMD_EXPORT(u2_send, u2_send);
 
 
-uint8_t buf[1024];
+uint8_t buf[USART2_RX_BUFFER_LENGTH];
 
 static void u2_rx_thread_entry(void* parameter)
 {
