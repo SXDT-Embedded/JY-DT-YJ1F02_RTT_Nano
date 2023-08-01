@@ -16,10 +16,10 @@
 #include "drv_gpio.h"
 
 #define BUZZER_PIN               GET_PIN(B, 15)
-#define BUZZER_ON()              rt_pin_write(BUZZER_PIN, PIN_HIGH)
-#define BUZZER_OFF()             rt_pin_write(BUZZER_PIN, PIN_LOW)
-#define READ_BUZZER()            rt_pin_read(BUZZER_PIN)
-#define BUZZER_TOGGLE()          rt_pin_write(BUZZER_PIN, !rt_pin_read(BUZZER_PIN))
+#define BUZZER_ON                rt_pin_write(BUZZER_PIN, PIN_HIGH)
+#define BUZZER_OFF               rt_pin_write(BUZZER_PIN, PIN_LOW)
+#define READ_BUZZER              rt_pin_read(BUZZER_PIN)
+#define BUZZER_TOGGLE            rt_pin_write(BUZZER_PIN, !rt_pin_read(BUZZER_PIN))
 
 
 int BSP_BUZZER_Init(void);

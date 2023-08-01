@@ -11,9 +11,9 @@
 
 #ifdef RT_USING_PIN
 
-//#define DRV_DEBUG
-#define LOG_TAG              "drv.gpio"
-#include <drv_log.h>
+#define LOG_TAG     "cpu_usage"          // 该模块对应的标签。不定义时，默认：NO_TAG
+#define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
+#include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
 static const struct pin_index pins[] =
 {

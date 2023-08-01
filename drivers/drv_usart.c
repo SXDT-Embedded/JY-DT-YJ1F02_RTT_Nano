@@ -1,20 +1,10 @@
-
 #include "board.h"
 #include <rtdevice.h>
 #include "drv_usart.h"
 
-//#define DRV_DEBUG
-// #define LOG_TAG              "drv.uart"
-// #include <drv_log.h>
-
-//#define DRV_DEBUG
-#define DBG_TAG              "drv.usart"
-#ifdef DRV_DEBUG
-#define DBG_LVL               DBG_LOG
-#else
-#define DBG_LVL               DBG_LOG
-#endif /* DRV_DEBUG */
-#include <rtdbg.h>
+#define LOG_TAG     "drv_usart"          // 该模块对应的标签。不定义时，默认：NO_TAG
+#define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
+#include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
 #ifdef RT_USING_SERIAL
 
@@ -412,14 +402,6 @@ rt_sem_t uart3_rev_parity_sem = RT_NULL;
 static rt_thread_t uart1_rx_dma_thread = RT_NULL;
 static rt_thread_t uart2_rx_dma_thread = RT_NULL;
 static rt_thread_t uart3_rx_dma_thread = RT_NULL;
-
-// volatile uint8_t uart1_rev_parity_flag = 0; //  串口1接收数据奇偶校验的标志
-// volatile uint8_t uart2_rev_parity_flag = 0; //  串口2接收数据奇偶校验的标志
-// volatile uint8_t uart3_rev_parity_flag = 0; //  串口3接收数据奇偶校验的标志
-
-// volatile uint8_t uart1_rev_flag = 0; //  串口2接收到数据待解析的标志
-// volatile uint8_t uart2_rev_flag = 0; //  串口2接收到数据待解析的标志
-// volatile uint8_t uart3_rev_flag = 0; //  串口3接收到数据待解析的标志
 
 void USART1_IRQHandler(void) __attribute__((interrupt()));
 void USART2_IRQHandler(void) __attribute__((interrupt()));
@@ -1664,18 +1646,14 @@ char rt_hw_console_getchar(void)
 {
     char ch = 0;
 
-    // /* 从 ringbuffer 中拿出数据 */
-    // while (rt_ringbuffer_getchar(&uart_rxcb, (rt_uint8_t *)&ch) != 1)
-    // {
-    //     rt_sem_take(&shell_rx_sem, RT_WAITING_FOREVER);
-    // }
-
-    // while (lwrb_read(&usart1_rx_rb, &ch, 1) != 1)
-    // {
-    //     rt_sem_take(uart1_rx_check_sem, RT_WAITING_FOREVER);
-    // }
-
-    lwrb_read(&usart1_rx_rb, &ch, 1);
+    if (lwrb_get_full(&usart1_rx_rb) > 0)
+    {
+        lwrb_read(&usart1_rx_rb, &ch, 1);
+    }
+    else
+    {
+        rt_sem_take(uart1_revok_sem, RT_WAITING_FOREVER);
+    }
 
     return ch;
 }

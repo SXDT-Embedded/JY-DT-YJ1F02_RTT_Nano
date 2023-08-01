@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-07-26 08:38:26
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-07-27 13:01:10
+ * @LastEditTime : 2023-08-01 13:23:21
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_buzzer.c
  * @Description  :
  *
@@ -12,12 +12,12 @@
 #include <rtthread.h>
 #include <rthw.h>
 
-//用到了atoi()
+//用到了atoi
 #include <stdlib.h>
 
-#define DBG_TAG "buzzer"
-#define DBG_LVL DBG_LOG
-#include <rtdbg.h>
+#define LOG_TAG     "bsp_buzzer"          // 该模块对应的标签。不定义时，默认：NO_TAG
+#define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
+#include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
 /**
  * @description: 蜂鸣器端口初始化
@@ -26,7 +26,7 @@
 int BSP_BUZZER_Init(void)
 {
     rt_pin_mode(BUZZER_PIN, PIN_MODE_OUTPUT);
-    BUZZER_OFF();
+    BUZZER_OFF;
 
     LOG_D("BSP_BUZZER_Init");
     return 0;
@@ -40,9 +40,9 @@ static void test_us(int argc, char **argv)
         uint32_t us = atoi(argv[1]);
         LOG_D("us = %d", us);
 
-        BUZZER_ON();
+        BUZZER_ON;
         rt_hw_us_delay(us);
-        BUZZER_OFF();
+        BUZZER_OFF;
     }
     else
     {
