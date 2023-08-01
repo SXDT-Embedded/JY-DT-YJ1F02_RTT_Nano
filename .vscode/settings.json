@@ -13,7 +13,9 @@
         "functional": "c",
         "ch32v20x_it.h": "c",
         "rtthread.h": "c",
-        "ulog.h": "c"
+        "ulog.h": "c",
+        "typeinfo": "cpp",
+        "ch32v20x.h": "c"
     },
     "commentTranslate.hover.enabled": false
 }

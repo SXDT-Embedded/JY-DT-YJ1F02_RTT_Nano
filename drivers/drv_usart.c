@@ -353,6 +353,114 @@ int rt_hw_usart_init(void)
 #include <string.h>
 #include "lwutil.h"
 
+#if 0
+#include "drv_uart_config.h"
+
+typedef struct {
+    /* OS queue */
+    rt_mq_t queue;                   /*!< Message queue */
+
+    /* Raw data buffer */
+    uint8_t dma_rx_buffer[64];                  /*!< DMA buffer for receive data */
+    size_t old_pos;                             /*!< Position for data */
+} uart_desc_volatile_t;
+
+typedef struct
+{
+    /* DMA config & flags management */
+    DMA_Channel_TypeDef *DmaChannel;  /*!< TX/RX DMA channel */
+
+    uint32_t dma_flag_gl;    // DMAx Channelx global flag
+    uint32_t dma_flag_tc;    // DMAx Channelxtransfer complete flag.
+    uint32_t dma_flag_ht;    // DMAx Channelx half transfer flag.
+    uint32_t dma_flag_te;    // DMAx Channelx transfer error flag.
+    // void (*DMA_ClearFlag)(uint32_t DMAy_FLAG);      // Clears the DMAy Channelx's pending flags.
+
+    uint32_t dma_it_gl;    // DMAx Channelx global flag
+    uint32_t dma_it_tc;    // DMAx Channelxtransfer complete flag.
+    uint32_t dma_it_ht;    // DMAx Channelx half transfer flag.
+    uint32_t dma_it_te;    // DMAx Channelx transfer error flag.
+    // void (*DMA_ClearITPendingBit)(uint32_t DMAy_IT); // Clears the DMAy Channelx's interrupt pending bits.
+
+    IRQn_Type dma_irq;                          /*!< DMA IRQ instance */
+} TsCh32DmaConfig;
+
+typedef struct {
+    /* UART config */
+    USART_TypeDef *UartInstance;                        /*!< UART/USART/LPUART instance */
+    IRQn_Type uart_irq;                         /*!< UART IRQ instance */
+
+    GPIO_TypeDef *uart_tx_port;
+    GPIO_TypeDef *uart_rx_port;
+    uint16_t uart_tx_pin;
+    uint16_t uart_rx_pin;
+    uint32_t gpio_remap;                // GPIO_Remap_USART1
+    FunctionalState gpio_remap_state;   // ENABLE or DISABLE.
+    // Changes the mapping of the specified pin.
+    // void (*GPIO_PinRemapConfig)(uint32_t GPIO_Remap, FunctionalState NewState);
+
+    TsCh32DmaConfig dma_tx;
+    TsCh32DmaConfig dma_rx;
+
+    /* Interrupts config */
+    uint8_t prio;                               /*!< Preemption priority number */
+
+    uart_desc_volatile_t* data;                 /*!< Pointer to volatile data */
+} TsCh32Uart;
+
+#if !defined(BSP_USING_UART1) && !defined(BSP_USING_UART2) && !defined(BSP_USING_UART3) && !defined(BSP_USING_UART4)
+    #error "Please define at least one BSP_USING_UARTx"
+    /* this driver can be disabled at menuconfig -> RT-Thread Components -> Device Drivers */
+#endif
+
+enum
+{
+#ifdef BSP_USING_UART1
+    UART1_INDEX,
+#endif
+#ifdef BSP_USING_UART2
+    UART2_INDEX,
+#endif
+#ifdef BSP_USING_UART3
+    UART3_INDEX,
+#endif
+#ifdef BSP_USING_UART4
+    UART4_INDEX,
+#endif
+};
+
+static struct TsCh32Uart ch32_uart_config[] =
+{
+#ifdef BSP_USING_UART1
+    UART1_CONFIG,
+#endif
+#ifdef BSP_USING_UART2
+    UART2_CONFIG,
+#endif
+#ifdef BSP_USING_UART3
+    UART3_CONFIG,
+#endif
+#ifdef BSP_USING_UART4
+    UART4_CONFIG,
+#endif
+#ifdef BSP_USING_UART5
+    UART5_CONFIG,
+#endif
+#ifdef BSP_USING_UART6
+    UART6_CONFIG,
+#endif
+#ifdef BSP_USING_UART7
+    UART7_CONFIG,
+#endif
+#ifdef BSP_USING_UART8
+    UART8_CONFIG,
+#endif
+#ifdef BSP_USING_LPUART1
+    LPUART1_CONFIG,
+#endif
+};
+#endif
+
 // USART RX buffer for DMA to transfer every received byte
 // Contains raw data that are about to be processed by different events
 uint8_t usart1_rx_dma_buffer[USART1_RX_BUFFER_LENGTH] = {0};
