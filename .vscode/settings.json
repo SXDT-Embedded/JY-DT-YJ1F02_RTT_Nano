@@ -15,7 +15,8 @@
         "rtthread.h": "c",
         "ulog.h": "c",
         "typeinfo": "cpp",
-        "ch32v20x.h": "c"
+        "ch32v20x.h": "c",
+        "bsp_bkp.h": "c"
     },
     "commentTranslate.hover.enabled": false
 }

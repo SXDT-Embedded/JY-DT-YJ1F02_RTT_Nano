@@ -10,7 +10,7 @@
  */
 #include "bsp_adc.h"
 
-#define LOG_TAG     "bsp_buzzer"          // 该模块对应的标签。不定义时，默认：NO_TAG
+#define LOG_TAG     "bsp_adc"          // 该模块对应的标签。不定义时，默认：NO_TAG
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
@@ -150,6 +150,7 @@ float Get_ADC_Average(TeAdcIndex index)
     return average;
 }
 
+// 这里测的是原始的ADC电压，没有经过缩放
 float Get_ADC_Voltage(TeAdcIndex index)
 {
     float voltage = Get_ADC_Average(index) * 3.3 / 4096;
@@ -159,6 +160,7 @@ float Get_ADC_Voltage(TeAdcIndex index)
     return voltage;
 }
 
+// 这里测的是原始的ADC电压，没有经过缩放
 static int TEST_Get_ADC_Voltage(int argc, char **argv)
 {
     if (argc == 2)
