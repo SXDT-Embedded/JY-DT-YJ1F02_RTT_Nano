@@ -39,7 +39,7 @@ void RTC_Set_Alarm(uint16_t syear, uint8_t smon, uint8_t sday, uint8_t hour, uin
 void RTC_Get_Time(void);
 uint8_t RTC_Get_Week(uint16_t year, uint8_t month, uint8_t day);
 
-uint8_t BSP_RTC_Init(void);
+int BSP_RTC_Init(void);
 uint32_t RTC_Time2TimeStamp(void);
 
 #endif // !__BSP_RTC_H__

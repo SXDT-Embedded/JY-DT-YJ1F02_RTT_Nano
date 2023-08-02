@@ -17,11 +17,14 @@
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
+//用到了atoi
+#include <stdlib.h>
+
 const uint8_t month_table[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 TsRtcDateTime RtcDateTime;
 
-void RTC_IRQHandler(void) __attribute__((interrupt("")));
+void RTC_IRQHandler(void) __attribute__((interrupt()));
 
 /**
  * @description: Judging whether it is a leap year.
@@ -66,7 +69,7 @@ uint8_t Is_LeapYear(uint16_t year)
  */
 uint32_t DateTime2Seconds(uint16_t syear, uint8_t smon, uint8_t sday, uint8_t hour, uint8_t min, uint8_t sec)
 {
-    logAssert((syear > 1970 || syear < 2099), printf("DateTime2Seconds(): [syear]Error!"));
+    ASSERT((syear > 1970 || syear < 2099));
 
     uint32_t y, m, d, x, t;
     signed char monx = smon;    /* 将月份转换成带符号的值, 方便后面运算 */
@@ -181,7 +184,7 @@ void RTC_Set_Time(uint16_t syear, uint8_t smon, uint8_t sday, uint8_t hour, uint
 //SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
         RTC_Set_Time, RTC_Set_Time, );
 
-static SET_RTC_Time(int argc, char **argv)
+static void SET_RTC_Time(int argc, char **argv)
 {
     if (argc == 7)
     {

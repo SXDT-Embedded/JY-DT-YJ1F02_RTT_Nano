@@ -12,6 +12,7 @@
 #define __BSP_FLASH_H__
 
 #include "board.h"
+#include "bsp_history_reading.h"
 
 #define FLASH_PAGE_SIZE             (256U)
 #define FLASH_PAGE_HR_RECORD_NUM    (25U)
@@ -157,7 +158,6 @@ void Flash_Write_Record(TeRecord record);
 
 uint8_t Flash_GetNum_Records(TeRecord record);
 
-
 void Flash_ErasePage_ConfigInfo(void);
 void Flash_ErasePage_ReadConfigInfo(uint8_t *page_buf);
 void Flash_Write_ConfigInfo(uint8_t *page_buf);
@@ -177,7 +177,7 @@ ErrorStatus Flash_GetTotalRecord(TsTotalRecords *pTotalRecords);
 ErrorStatus Flash_GetRecord(TeFrameC2 record_type, uint8_t index, TsRecordsTime *pRecordsTime);
 
 void BSP_Flash_EraseRecodrs(void);
-void BSP_Flash_Init(void);
+int BSP_Flash_Init(void);
 
 
 

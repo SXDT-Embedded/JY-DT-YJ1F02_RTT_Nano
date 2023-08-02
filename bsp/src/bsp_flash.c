@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 14:10:22
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 14:23:48
+ * @LastEditTime : 2023-08-02 15:25:09
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_flash.c
  * @Description  :
  *
@@ -14,6 +14,9 @@
 #include "bsp_rtc.h"
 // #include "bsp_wdg.h"
 #include "bsp_mq.h"
+
+#include <rtthread.h>
+#include <rthw.h>
 
 #define LOG_TAG     "bsp_flash"          // 该模块对应的标签。不定义时，默认：NO_TAG
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
@@ -37,12 +40,13 @@ const uint8_t hr_record_pages[7] = {HR_ALARM_PAGES, HR_ALARM_RCY_PAGES, \
         HR_SENSOR_FAILURE_PAGES
 };
 
+static rt_base_t interrupt_value;
 static void BSP_Flash_UnLock(void)
 {
 #if (SystemCoreClock > SYSCLK_FREQ_96MHz_HSE)
     RCC->CFGR0 |= (uint32_t)RCC_HPRE_DIV2;
 #endif
-    rt_hw_interrupt_disable();
+    interrupt_value = rt_hw_interrupt_disable();
 
     FLASH_Unlock();
 }
@@ -54,7 +58,7 @@ static void BSP_Flash_Lock(void)
 #if (SystemCoreClock > SYSCLK_FREQ_96MHz_HSE)
     RCC->CFGR0 &= ~(uint32_t)RCC_HPRE_DIV2;
 #endif
-    rt_hw_interrupt_enable();
+    rt_hw_interrupt_enable(interrupt_value);
 }
 
 static void BSP_Flash_FastUnLock(void)
@@ -62,7 +66,7 @@ static void BSP_Flash_FastUnLock(void)
 #if (SystemCoreClock > SYSCLK_FREQ_96MHz_HSE)
     RCC->CFGR0 |= (uint32_t)RCC_HPRE_DIV2;
 #endif
-    rt_hw_interrupt_disable();
+    interrupt_value = rt_hw_interrupt_disable();
 
     FLASH_Unlock_Fast();
 }
@@ -74,7 +78,7 @@ static void BSP_Flash_FastLock(void)
 #if (SystemCoreClock > SYSCLK_FREQ_96MHz_HSE)
     RCC->CFGR0 &= ~(uint32_t)RCC_HPRE_DIV2;
 #endif
-    rt_hw_interrupt_enable();
+    rt_hw_interrupt_enable(interrupt_value);
 }
 
 /**
@@ -118,7 +122,7 @@ static size_t Flash_Write(uint32_t addr, uint8_t *buf, size_t len)
 
     for (i = 0; i < len; i += 2, buf += 2, addr += 2)
     {
-        memcpy(&write_data, buf, 2); //用以保证HAL_FLASH_Program的write_data是内存首地址对齐
+        rt_memcpy(&write_data, buf, 2); //用以保证HAL_FLASH_Program的write_data是内存首地址对齐
         FLASH_ProgramHalfWord(addr, write_data);
 
         /* You can add your code under here. */
@@ -291,8 +295,8 @@ void Flash_Read_Record(TuFlashHrRecordFrame* pHrRecord, TeRecord record, uint8_t
     }
     else
     {
-        memset(pHrRecord->buf, 0, HR_RECORD_FRAME_LEN);
-        logError("Flash_GetMaxNum_(%d)Records Error!: (index_max)%d < %d", record, index_max, index);
+        rt_memset(pHrRecord->buf, 0, HR_RECORD_FRAME_LEN);
+        LOG_E("Flash_GetMaxNum_(%d)Records Error!: (index_max)%d < %d", record, index_max, index);
     }
 }
 
@@ -382,20 +386,17 @@ void Flash_Write_Record(TeRecord record)
 
     Flash_Write_RecordIndex(&HrRecord, record, index_new);
 }
-// //SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0) | SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-//     Flash_Write_Record, Flash_Write_Record, "record(0~6)");
 
-//static void TEST_Flash_Write_Record(TeRecord record, uint16_t num)
-//{
-//    for (uint16_t i = 0; i < num; i++)
-//    {
-//        Flash_Write_Record(record);
-//        Delay_Ms(2);
-//        // BSP_WDG_Loop();
-//    }
-//}
-//SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0) | SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-        TEST_Flash_Write_Record, TEST_Flash_Write_Record, "record(0~6), num");
+static void TEST_Flash_Write_Record(TeRecord record, uint16_t num)
+{
+   for (uint16_t i = 0; i < num; i++)
+   {
+       Flash_Write_Record(record);
+       rt_thread_mdelay(2);
+       // BSP_WDG_Loop();
+   }
+}
+MSH_CMD_EXPORT(TEST_Flash_Write_Record, "record(0~6), num");
 
 void Flash_ErasePage_ConfigInfo(void)
 {
@@ -448,20 +449,19 @@ ErrorStatus Flash_GetProductTimeLimit(TuFlashProductTimeLimitFrame *pLimitTime,
         }
         else
         {
-            logError("Flash_GetProductTimeLimit Error!");
+            LOG_E("Flash_GetProductTimeLimit Error!");
         }
     }
 
     return flag;
 }
 
-//static void TEST_Flash_GetProductTimeLimit(TeFlashProductTimeLimitId id)
-//{
-//    TuFlashProductTimeLimitFrame LimitTime;
-//    Flash_GetProductTimeLimit(&LimitTime, id);
-//}
-//SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-    TEST_Flash_GetProductTimeLimit, TEST_Flash_GetProductTimeLimit, "id(0:FACTORY; 1:EXPIRATION)");
+static void TEST_Flash_GetProductTimeLimit(TeFlashProductTimeLimitId id)
+{
+   TuFlashProductTimeLimitFrame LimitTime;
+   Flash_GetProductTimeLimit(&LimitTime, id);
+}
+MSH_CMD_EXPORT(TEST_Flash_GetProductTimeLimit, "id(0:FACTORY; 1:EXPIRATION)");
 
 void Flash_SetProductTimeLimit(uint16_t year, uint8_t mon, uint8_t day
         ,uint8_t hour, uint8_t min, uint8_t second, TeFlashProductTimeLimitId id)
@@ -499,8 +499,7 @@ void Flash_SetProductTimeLimit(uint16_t year, uint8_t mon, uint8_t day
     TuFlashProductTimeLimitFrame ReadLimitTime;
     Flash_GetProductTimeLimit(&ReadLimitTime, id);
 }
-//SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-    Flash_SetProductTimeLimit, Flash_SetProductTimeLimit, "y m d h m s, id(0:FACTORY; 1:EXPIRATION)");
+MSH_CMD_EXPORT(Flash_SetProductTimeLimit, "y m d h m s, id(0:FACTORY; 1:EXPIRATION)");
 
 void Set_FactoryRtcTime(void)
 {
@@ -511,8 +510,7 @@ void Set_FactoryRtcTime(void)
     Flash_SetProductTimeLimit(RtcDateTime.year, RtcDateTime.month, RtcDateTime.day
         , RtcDateTime.hour, RtcDateTime.minute, RtcDateTime.second, kFactoryTimeId);
 }
-//SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-    Set_FactoryRtcTime, Set_FactoryRtcTime, "Use RTC time Set_FactoryRtcTime");
+MSH_CMD_EXPORT(Set_FactoryRtcTime, "Use RTC time Set_FactoryRtcTime");
 
 void Set_ExpirationTime(uint16_t days)
 {
@@ -554,8 +552,7 @@ void Set_ExpirationTime(uint16_t days)
                     LimitTime.Struct.hour, LimitTime.Struct.minute, LimitTime.Struct.second);
     }
 }
-//SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-    Set_ExpirationTime, Set_ExpirationTime, "(uint16_t) days");
+MSH_CMD_EXPORT(Set_ExpirationTime, "(uint16_t) days");
 
 uint16_t Flash_GetMQ_AlarmValue(void)
 {
@@ -572,13 +569,12 @@ uint16_t Flash_GetMQ_AlarmValue(void)
     }
     else
     {
-        logError("Flash_GetMQ_AlarmValue Error!");
+        LOG_E("Flash_GetMQ_AlarmValue Error!");
     }
 
     return value;
 }
-SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-    Flash_GetMQ_AlarmValue, Flash_GetMQ_AlarmValue, "Flash_GetMQ_AlarmValue");
+MSH_CMD_EXPORT(Flash_GetMQ_AlarmValue, "Flash_GetMQ_AlarmValue");
 
 void Flash_SetMQ_AlarmValue(uint16_t value)
 {
@@ -601,8 +597,7 @@ void Flash_SetMQ_AlarmValue(uint16_t value)
 
     LOG_D("Flash_GetMQ_AlarmValue() = %d", Flash_GetMQ_AlarmValue());
 }
-SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC)
-    , Flash_SetMQ_AlarmValue, Flash_SetMQ_AlarmValue, "value(uint16_t)");
+MSH_CMD_EXPORT(Flash_SetMQ_AlarmValue, "value(uint16_t)");
 
 ErrorStatus Flash_GetTotalRecord(TsTotalRecords *pTotalRecords)
 {
@@ -665,7 +660,7 @@ void BSP_Flash_EraseRecodrs(void)
     Flash_ErasePage_ConfigInfo();
 }
 
-void BSP_Flash_Init(void)
+int BSP_Flash_Init(void)
 {
     if(*(uint16_t *)FLASH_INIT_FLAG_ADDR != FLASH_FIRST_INIT_VALUE)
     {
@@ -686,5 +681,6 @@ void BSP_Flash_Init(void)
         Flash_SetProductTimeLimit(2023, 3, 22, 13, 58, 20, kFactoryTimeId);
         Flash_SetProductTimeLimit(2028, 3, 22, 13, 58, 20, kExpirationTimeId);
     }
+    return 0;
 }
-
+INIT_APP_EXPORT(BSP_Flash_Init);
