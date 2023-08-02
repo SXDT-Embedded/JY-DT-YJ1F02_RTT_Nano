@@ -33,7 +33,7 @@ int BSP_LED_Init(void)
     NETLED_G_OFF;
     NETLED_Y_OFF;
 
-    LOG_D("BSP_LED_Init");
+    LOG_I("BSP_LED_Init");
     return 0;
 }
-INIT_DEVICE_EXPORT(BSP_LED_Init);
+INIT_APP_EXPORT(BSP_LED_Init);

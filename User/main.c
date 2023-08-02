@@ -19,8 +19,8 @@ int main(void)
 	{
 //        for (int i = 0; i < 10000; i++);
 //
-//	    LED_R_TOGGLE();
-//	    NETLED_R_TOGGLE();
-	    rt_thread_mdelay(2);
+	    LED_R_TOGGLE;
+	    NETLED_R_TOGGLE;
+	    rt_thread_mdelay(1000);
     }
 }

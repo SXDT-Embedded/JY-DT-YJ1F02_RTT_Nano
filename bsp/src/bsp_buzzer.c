@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-07-26 08:38:26
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-01 13:23:21
+ * @LastEditTime : 2023-08-02 11:25:44
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_buzzer.c
  * @Description  :
  *
@@ -28,10 +28,10 @@ int BSP_BUZZER_Init(void)
     rt_pin_mode(BUZZER_PIN, PIN_MODE_OUTPUT);
     BUZZER_OFF;
 
-    LOG_D("BSP_BUZZER_Init");
+    LOG_I("BSP_BUZZER_Init");
     return 0;
 }
-INIT_DEVICE_EXPORT(BSP_BUZZER_Init);
+INIT_APP_EXPORT(BSP_BUZZER_Init);
 
 static void test_us(int argc, char **argv)
 {
