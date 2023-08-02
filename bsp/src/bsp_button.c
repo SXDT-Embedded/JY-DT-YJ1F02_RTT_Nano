@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 17:15:25
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 17:32:10
+ * @LastEditTime : 2023-08-02 17:43:44
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_button.c
  * @Description  :
  *
@@ -121,5 +121,8 @@ int BSP_BUTTON_Init(void)
 
     LOG_I("BSP_BUTTON_Init!");
 }
-INIT_APP_EXPORT(BSP_BUTTON_Init);
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_DEVICE_EXPORT(BSP_BUTTON_Init);
+#endif
+
 

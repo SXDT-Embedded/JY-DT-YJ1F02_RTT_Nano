@@ -36,6 +36,7 @@
 #define MQ_LIFE_TIMS_YEAR           (3)
 #define MQ_END_OF_LIFE_TIMS_S       ((uint32_t)(3600 * 24 * 365 * MQ_LIFE_TIMS_YEAR))
 
+#define MQ_THREAD_STACK_SIZE    (512)
 #define MQ_THREAD_PRIORITY      9
 #define MQ_THREAD_TIMESLICE     5
 

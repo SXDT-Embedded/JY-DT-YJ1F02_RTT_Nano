@@ -84,4 +84,7 @@ int BSP_Coil_Init(void)
 
     return 0;
 }
-INIT_APP_EXPORT(BSP_Coil_Init);
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_BOARD_EXPORT(BSP_Coil_Init);
+#endif
+

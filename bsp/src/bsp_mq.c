@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-01-30 15:40:07
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 14:02:00
+ * @LastEditTime : 2023-08-02 17:36:31
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_mq.c
  * @Description  :
  *
@@ -19,7 +19,7 @@
 struct rt_event mq_event;
 
 ALIGN(RT_ALIGN_SIZE)
-static char mq_detection_thread_stack[512];
+static char mq_detection_thread_stack[MQ_THREAD_STACK_SIZE];
 static struct rt_thread mq_detection_thread;
 
 TeMq Mq;
@@ -163,8 +163,9 @@ int BSP_MQ_Init(void)
 
     return 0;
 }
-INIT_APP_EXPORT(BSP_MQ_Init);
-
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_DEVICE_EXPORT(BSP_MQ_Init);
+#endif
 
 static void TEST_MQ_Send()
 {

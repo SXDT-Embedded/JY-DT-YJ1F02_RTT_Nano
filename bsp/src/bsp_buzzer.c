@@ -31,7 +31,9 @@ int BSP_BUZZER_Init(void)
     LOG_I("BSP_BUZZER_Init");
     return 0;
 }
-INIT_APP_EXPORT(BSP_BUZZER_Init);
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_DEVICE_EXPORT(BSP_BUZZER_Init);
+#endif
 
 static void test_us(int argc, char **argv)
 {

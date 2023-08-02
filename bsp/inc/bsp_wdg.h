@@ -13,6 +13,7 @@
 
 #include "board.h"
 
+#define WDG_THREAD_STACK_SIZE    (512)
 #define WDG_THREAD_PRIORITY      30
 #define WDG_THREAD_TIMESLICE     5
 

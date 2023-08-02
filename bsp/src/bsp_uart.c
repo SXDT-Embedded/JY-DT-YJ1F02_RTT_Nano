@@ -52,7 +52,9 @@ static int u2_init()
 
     return RT_ERROR;
 }
-INIT_APP_EXPORT(u2_init);
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_DEVICE_EXPORT(u2_init);
+#endif
 
 
 #if 0

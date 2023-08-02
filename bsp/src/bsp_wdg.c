@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 14:27:17
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 15:07:10
+ * @LastEditTime : 2023-08-02 17:47:41
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_wdg.c
  * @Description  :
  *
@@ -15,7 +15,7 @@
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
 ALIGN(RT_ALIGN_SIZE)
-static char wdg_thread_stack[512];
+static char wdg_thread_stack[WDG_THREAD_STACK_SIZE];
 static struct rt_thread wdg_thread;
 
 #if USED_WWDG
@@ -172,7 +172,7 @@ int BSP_WDG_Init(void)
     return 0;
 }
 #ifdef RT_USING_COMPONENTS_INIT
-INIT_APP_EXPORT(BSP_WDG_Init);
+INIT_DEVICE_EXPORT(BSP_WDG_Init);
 #endif
 
 #if USED_WWDG

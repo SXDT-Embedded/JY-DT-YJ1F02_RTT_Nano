@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 14:25:55
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 15:18:50
+ * @LastEditTime : 2023-08-02 17:47:04
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_rtc.c
  * @Description  :
  *
@@ -432,7 +432,10 @@ int BSP_RTC_Init(void)
 
     return 0;
 }
-INIT_APP_EXPORT(BSP_RTC_Init);
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_DEVICE_EXPORT(BSP_RTC_Init);
+#endif
+
 
 void RTC_Control(uint8_t flag)
 {

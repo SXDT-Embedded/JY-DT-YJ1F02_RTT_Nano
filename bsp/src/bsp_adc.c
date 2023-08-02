@@ -129,7 +129,9 @@ int BSP_ADC_Init(void)
 
     return 0;
 }
-INIT_APP_EXPORT(BSP_ADC_Init);
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_BOARD_EXPORT(BSP_ADC_Init);
+#endif
 
 /**
  * @description: ADC平均值计算

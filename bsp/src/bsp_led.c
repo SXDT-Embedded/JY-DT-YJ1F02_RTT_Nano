@@ -36,4 +36,7 @@ int BSP_LED_Init(void)
     LOG_I("BSP_LED_Init");
     return 0;
 }
-INIT_APP_EXPORT(BSP_LED_Init);
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_DEVICE_EXPORT(BSP_LED_Init);
+#endif
+

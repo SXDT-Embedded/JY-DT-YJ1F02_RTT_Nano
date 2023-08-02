@@ -683,4 +683,7 @@ int BSP_Flash_Init(void)
     }
     return 0;
 }
-INIT_APP_EXPORT(BSP_Flash_Init);
+#ifdef RT_USING_COMPONENTS_INIT
+INIT_BOARD_EXPORT(BSP_Flash_Init);
+#endif
+
