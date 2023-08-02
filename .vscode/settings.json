@@ -16,7 +16,9 @@
         "ulog.h": "c",
         "typeinfo": "cpp",
         "ch32v20x.h": "c",
-        "bsp_bkp.h": "c"
+        "bsp_bkp.h": "c",
+        "numbers": "c"
     },
-    "commentTranslate.hover.enabled": false
+    "commentTranslate.hover.enabled": false,
+    "commentTranslate.targetLanguage": "zh-CN"
 }

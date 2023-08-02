@@ -10,6 +10,7 @@ encoding//bsp/inc/bsp_led.h=GBK
 encoding//bsp/src/bsp_adc.c=UTF-8
 encoding//bsp/src/bsp_buzzer.c=UTF-8
 encoding//bsp/src/bsp_led.c=GBK
+encoding//bsp/src/bsp_mq.c=UTF-8
 encoding//bsp/src/bsp_uart.c=GBK
 encoding//common/letter-shell/extensions/log/log.h=UTF-8
 encoding//drivers/drv_gpio.c=UTF-8

@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 11:49:34
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 11:49:34
+ * @LastEditTime : 2023-08-02 14:04:47
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\inc\bsp_mq.h
  * @Description  :
  *
@@ -31,27 +31,23 @@
 // 甲烷 5   VOL% = 50,000 ppm = 100 LEL;  1 LEL = 500 ppm
 // 丙烷 2.2 VOL% = 22,000 ppm = 100 %LEL; 1 LEL = 220 ppm; 8 LEL = 1760 ppm; 10 LEL = 2200 ppm;
 
-#define MQ_ALARM_DEFAULT_LEL        (10)
+// #define MQ_ALARM_DEFAULT_LEL        (10)
 
 #define MQ_LIFE_TIMS_YEAR           (3)
 #define MQ_END_OF_LIFE_TIMS_S       ((uint32_t)(3600 * 24 * 365 * MQ_LIFE_TIMS_YEAR))
-// 预热3min
-// #define MQ_WARM_UP_TIME_MS          ((uint64_t)(1000 * 60 * 3))
 
-// extern uint16_t mq_alarm_value;
-// extern uint32_t mq_expiration_seconds;
+#define MQ_THREAD_PRIORITY      9
+#define MQ_THREAD_TIMESLICE     5
 
-typedef enum
-{
-    kMqNormal = 0,
-    kMqAlarm,
-    kMqEndOfLife,
-    kMqOpenCircuit,
-    kMqShortCircuit,
-    kMqCalibration,
-    kMqFault
-}TeMqStatus;
+#define MQ_EVENT_NORMAL_FLAG            (1 << 0)
+#define MQ_EVENT_ALARM_FLAG             (1 << 1)
+#define MQ_EVENT_END_OF_LIFE_FLAG       (1 << 2)
+#define MQ_EVENT_OPEN_CIRCUIT_FLAG      (1 << 3)
+#define MQ_EVENT_SHORT_CIRCUIT_FLAG     (1 << 4)
+#define MQ_EVENT_CALIBRATION_FLAG       (1 << 5)
+#define MQ_EVENT_FAULT_FLAG             (1 << 6)
 
+extern struct rt_event mq_event;
 
 typedef struct __attribute__((packed))
 {
@@ -63,20 +59,12 @@ typedef struct __attribute__((packed))
 
     uint8_t detection_flag;
 } TeMq;
-
-
 extern TeMq Mq;
 
 
-void BSP_MQ_Init(void);
-
-FlagStatus IS_MQ_EndOfLife(void);
-TeMqStatus MQ_Detection(void);
-TeMqStatus BSP_MQ_Detection(void);
-
+int BSP_MQ_Init(void);
 uint16_t Get_MQ_VoltageInt1000x(void);
 
-void BSP_MQ_Loop(void);
 
 
 #endif // !__BSP_MQ_H__
