@@ -17,7 +17,8 @@
         "typeinfo": "cpp",
         "ch32v20x.h": "c",
         "bsp_bkp.h": "c",
-        "numbers": "c"
+        "numbers": "c",
+        "bsp_flash.h": "c"
     },
     "commentTranslate.hover.enabled": false,
     "commentTranslate.targetLanguage": "zh-CN"
