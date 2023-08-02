@@ -33,13 +33,13 @@
 #define USED_ADC_DMA_STREAM         DMA1_Channel1
 
 /*****************机械手/电磁阀驱动电流的检测***********************/
-// #define COIL_ADC_GPIO_PORT              GPIOA
-#define COIL_ADC_GPIO_PIN               GPIO_Pin_0
-// #define COIL_ADC_GPIO_CLK_ENABLE()      RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE)
+// #define EMV_ADC_GPIO_PORT              GPIOA
+#define EMV_ADC_GPIO_PIN               GPIO_Pin_0
+// #define EMV_ADC_GPIO_CLK_ENABLE()      RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE)
 
-// #define COIL_ADC                        ADC1
-// #define COIL_ADC_CLK_ENABLE()           RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-#define COIL_ADC_CHANNEL                ADC_Channel_0
+// #define EMV_ADC                        ADC1
+// #define EMV_ADC_CLK_ENABLE()           RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+#define EMV_ADC_CHANNEL                ADC_Channel_0
 
 /****************************MQ-6的检测****************************/
 // #define MQ_ADC_GPIO_PORT              GPIOA

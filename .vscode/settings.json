@@ -20,7 +20,10 @@
         "numbers": "c",
         "bsp_flash.h": "c",
         "shell.h": "c",
-        "finsh.h": "c"
+        "finsh.h": "c",
+        "stdlib.h": "c",
+        "bsp_sys.h": "c",
+        "bsp_emv.h": "c"
     },
     "commentTranslate.hover.enabled": false,
     "commentTranslate.targetLanguage": "zh-CN"

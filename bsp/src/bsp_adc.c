@@ -46,7 +46,7 @@ static void USED_ADC_GPIO_Init(void)
     USED_ADC_GPIO_CLK_ENABLE();
 
     // 配置 IO
-    GPIO_InitStructure.GPIO_Pin = COIL_ADC_GPIO_PIN | MQ_ADC_GPIO_PIN | VIN_ADC_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Pin = EMV_ADC_GPIO_PIN | MQ_ADC_GPIO_PIN | VIN_ADC_GPIO_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
     GPIO_Init(USED_ADC_GPIO_PORT, &GPIO_InitStructure);
 }
@@ -94,7 +94,7 @@ int BSP_ADC_Init(void)
     ADC_Init(USED_ADC, &ADC_InitStructure);
 
     // 设置指定ADC的规则组通道，设置它们的转化顺序和采样时间
-    ADC_RegularChannelConfig(USED_ADC, COIL_ADC_CHANNEL, 1, ADC_SampleTime_239Cycles5);
+    ADC_RegularChannelConfig(USED_ADC, EMV_ADC_CHANNEL, 1, ADC_SampleTime_239Cycles5);
     ADC_RegularChannelConfig(USED_ADC, MQ_ADC_CHANNEL, 2, ADC_SampleTime_239Cycles5);
     ADC_RegularChannelConfig(USED_ADC, VIN_ADC_CHANNEL, 3, ADC_SampleTime_239Cycles5);
 
