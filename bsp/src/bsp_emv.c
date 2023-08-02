@@ -15,7 +15,7 @@
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
-// //用到了atoi
+// 用到了atoi
 // #include <stdlib.h>
 
 // ALIGN(RT_ALIGN_SIZE)
@@ -65,6 +65,8 @@ int Coil_Close(void)
     Coil_Run(kForward);
     rt_thread_mdelay(EMV_ACTION_MS);
     Coil_Run(kCoast);
+
+    LOG_D("Coil_Close");
 
     return 0;
 }

@@ -23,7 +23,10 @@
         "finsh.h": "c",
         "stdlib.h": "c",
         "bsp_sys.h": "c",
-        "bsp_emv.h": "c"
+        "bsp_emv.h": "c",
+        "bsp_buzzer.h": "c",
+        "bsp_button.h": "c",
+        "pin.h": "c"
     },
     "commentTranslate.hover.enabled": false,
     "commentTranslate.targetLanguage": "zh-CN"
