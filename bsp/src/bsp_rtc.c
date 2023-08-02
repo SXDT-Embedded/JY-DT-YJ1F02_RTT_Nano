@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 14:25:55
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 14:27:12
+ * @LastEditTime : 2023-08-02 15:18:50
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_rtc.c
  * @Description  :
  *
@@ -17,11 +17,11 @@
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
-void RTC_IRQHandler(void) __attribute__((interrupt("")));
-
 const uint8_t month_table[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 TsRtcDateTime RtcDateTime;
+
+void RTC_IRQHandler(void) __attribute__((interrupt("")));
 
 /**
  * @description: Judging whether it is a leap year.
@@ -175,11 +175,27 @@ void RTC_Set_Time(uint16_t syear, uint8_t smon, uint8_t sday, uint8_t hour, uint
     RTC_WaitForLastTask();
 
     RTC_Get_Time();
-    logDebug("%4d-%02d-%02d, %02d:%02d:%02d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.day, \
+    LOG_D("%4d-%02d-%02d, %02d:%02d:%02d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.day, \
             RtcDateTime.hour, RtcDateTime.minute, RtcDateTime.second);
 }
 //SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-        RTC_Set_Time, RTC_Set_Time, "y m d h m s");
+        RTC_Set_Time, RTC_Set_Time, );
+
+static SET_RTC_Time(int argc, char **argv)
+{
+    if (argc == 7)
+    {
+        RTC_Set_Time(2000 + (uint16_t)(atoi(argv[1])), (uint8_t)(atoi(argv[2]))
+                , (uint8_t)(atoi(argv[3])), (uint8_t)(atoi(argv[4]))
+                , (uint8_t)(atoi(argv[5])), (uint8_t)(atoi(argv[6])));
+    }
+    else
+    {
+        LOG_E("--used test_us [2000+y m d h m s]");
+        return;
+    }
+}
+MSH_CMD_EXPORT(SET_RTC_Time, "2000+y m d h m s");
 
 /**
  * @description: Set Alarm Time.
@@ -310,8 +326,8 @@ static uint8_t RTC_First_Init(void)
     while(RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET && temp < 250)
     {
         temp++;
-//        logDebug("temp: %d", temp);
-        Delay_Ms(5);
+        // LOG_D("temp: %d", temp);
+        rt_thread_mdelay(5);
     }
     if(temp >= 250)
         return 1;
@@ -336,27 +352,25 @@ static uint8_t RTC_First_Init(void)
     {
         RTC_Set_Time(LimitTime.Struct.year, LimitTime.Struct.month, LimitTime.Struct.day, \
                      LimitTime.Struct.hour, LimitTime.Struct.minute, 0); /* Setup Time */
-        logDebug("RTC_Set_Time:%04d-%02d-%02d,%02d:%02d", \
+        LOG_D("RTC_Set_Time:%04d-%02d-%02d,%02d:%02d", \
                     LimitTime.Struct.year, LimitTime.Struct.month, LimitTime.Struct.day,
                     LimitTime.Struct.hour, LimitTime.Struct.minute);
     }
 
     return 0;
 }
-////SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-//        RTC_First_Init, RTC_First_Init, "RTC_First_Init");
 
 /**
  * @description: Initializes RTC collection.
  * @return {*}  1 - Init Fail  0 - Init Success
  */
 // https://blog.csdn.net/Dreamer_HHH/article/details/95636976
-uint8_t BSP_RTC_Init(void)
+int BSP_RTC_Init(void)
 {
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
     PWR_BackupAccessCmd(ENABLE);
 
-    logDebug("RCC_GetFlagStatus(RCC_FLAG_LSERDY): %d", RCC_GetFlagStatus(RCC_FLAG_LSERDY));
+    LOG_D("RCC_GetFlagStatus(RCC_FLAG_LSERDY): %d", RCC_GetFlagStatus(RCC_FLAG_LSERDY));
     if(RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET || BKP_ReadBackupRegister(BKP_DR_RTC_FIRST_INIT) != RTC_FIRST_INIT_VALUE)
     {
         RTC_First_Init();
@@ -366,34 +380,34 @@ uint8_t BSP_RTC_Init(void)
         // 外部手动复位
         // if(RCC_GetFlagStatus(RCC_FLAG_PINRST) != RESET)
         // {
-        //     logDebug("外部手动复位");
+        //     LOG_D("外部手动复位");
         // }
         // // 上电/掉电复位标志
         // if (RCC_GetFlagStatus(RCC_FLAG_PORRST) != RESET)
         // {
-        //     logDebug("上电/掉电复位");
+        //     LOG_D("上电/掉电复位");
         //     Flash_Write_Record(kRecordPowerOn);
         //     RCC_ClearFlag();
         // }
         // 软件复位
         if(RCC_GetFlagStatus(RCC_FLAG_SFTRST) != RESET)
         {
-            logDebug("软件复位");
+            LOG_D("软件复位");
         }
         // 独立看门狗复位
         if(RCC_GetFlagStatus(RCC_FLAG_IWDGRST) != RESET)
         {
-            logDebug("独立看门狗复位");
+            LOG_D("独立看门狗复位");
         }
         // 窗口看门狗复位
         if(RCC_GetFlagStatus(RCC_FLAG_WWDGRST) != RESET)
         {
-            logDebug("窗口看门狗复位");
+            LOG_D("窗口看门狗复位");
         }
         // 低功耗复位
         if(RCC_GetFlagStatus(RCC_FLAG_LPWRRST) != RESET)
         {
-            logDebug("低功耗复位");
+            LOG_D("低功耗复位");
         }
         // RCC_ClearFlag();
 
@@ -409,12 +423,13 @@ uint8_t BSP_RTC_Init(void)
     RTC_NVIC_Config();
     RTC_Get_Time();
 
-    logDebug("%4d-%02d-%02d, %02d:%02d:%02d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.day, \
+    LOG_D("%4d-%02d-%02d, %02d:%02d:%02d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.day, \
             RtcDateTime.hour, RtcDateTime.minute, RtcDateTime.second);
-    logDebug("BSP_RTC_Init!");
+    LOG_I("BSP_RTC_Init!");
 
     return 0;
 }
+INIT_APP_EXPORT(BSP_RTC_Init);
 
 void RTC_Control(uint8_t flag)
 {
@@ -431,12 +446,11 @@ void RTC_Control(uint8_t flag)
     else if(flag == 2)
     {
         RTC_Get_Time();
-        logDebug("%4d-%02d-%02d, week:%d, %02d:%02d:%02d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.day, \
+        LOG_D("%4d-%02d-%02d, week:%d, %02d:%02d:%02d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.day, \
                    RtcDateTime.week ,RtcDateTime.hour, RtcDateTime.minute, RtcDateTime.second);
     }
 }
-SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
-        RTC_Control, RTC_Control, "0, 1(1s)show time: 2-show time once");
+MSH_CMD_EXPORT(RTC_Control, "0, 1(1s)show time: 2-show time once");
 
 /**
  * @brief       RTC时钟中断
@@ -447,12 +461,16 @@ SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_FUNC), \
  */
 void RTC_IRQHandler(void)
 {
+    GET_INT_SP();
+    /* enter interrupt */
+    rt_interrupt_enter();
+
     // 秒中断
     if(RTC_GetITStatus(RTC_FLAG_SEC) != RESET)
     {
         RTC_ClearITPendingBit(RTC_FLAG_SEC);
         RTC_Get_Time();
-        logDebug("%4d-%02d-%02d, %02d:%02d:%02d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.day, \
+        LOG_D("%4d-%02d-%02d, %02d:%02d:%02d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.day, \
             RtcDateTime.hour, RtcDateTime.minute, RtcDateTime.second);
         // if (IS_MQ_EndOfLife() == SET)
         // {
@@ -465,7 +483,7 @@ void RTC_IRQHandler(void)
     // {
     //     RTC_Get_Time();
     //     RTC_ClearITPendingBit(RTC_FLAG_ALR);
-    //     logDebug("%4d-%2d-%2d,%2d:%2d:%2d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.date, \
+    //     LOG_D("%4d-%2d-%2d,%2d:%2d:%2d", RtcDateTime.year, RtcDateTime.month, RtcDateTime.date, \
     //         RtcDateTime.hour, RtcDateTime.minute, RtcDateTime.second);
     // }
 
@@ -475,4 +493,8 @@ void RTC_IRQHandler(void)
     //     RTC_ClearITPendingBit(RTC_FLAG_OW);
     //     RTC_WaitForLastTask();
     // }
+
+    /* leave interrupt */
+    rt_interrupt_leave();
+    FREE_INT_SP();
 }
