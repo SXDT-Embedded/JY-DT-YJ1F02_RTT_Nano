@@ -1716,7 +1716,7 @@ void USART3_IRQHandler(void)
 int rt_hw_usart_init(void)
 {
     USART1_Init(115200, kCheck0Stop1);
-    USART2_Init(115200, kCheck0Stop1);
+    // USART2_Init(115200, kCheck0Stop1);
     USART3_Init(115200, kCheck0Stop1);
 
     return 0;

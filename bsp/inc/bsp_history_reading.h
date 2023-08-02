@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 15:23:50
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 15:23:50
+ * @LastEditTime : 2023-08-02 18:17:07
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\inc\bsp_history_reading.h
  * @Description  :
  *
@@ -13,8 +13,11 @@
 
 #include "board.h"
 
-#define HR_BAUDRATE (4800)
+#define HR_THREAD_STACK_SIZE    (1024)
+#define HR_THREAD_PRIORITY      (2)
+#define HR_THREAD_TIMESLICE     (5)
 
+#define HR_BAUDRATE (4800)
 
 /*************可燃气体探测器报警历史记录读取串口通信协议****************/
 // 帧起始符(1)  控制码(2)       数据域长度(1)  数据域(n)    校验码(1)   结束符(1)
@@ -96,7 +99,8 @@ typedef struct __attribute__((packed))
     uint8_t buf[256];
 } TsRawFrameData;
 
-void BSP_HR_Init(void);
+int BSP_HR_Init(void);
+
 void HR_Loop(void);
 TsFrameData* HR_GetFrameData(const uint8_t *p_src, const uint8_t src_len);
 // FlagStatus HR_ProcessData(const TsFrameData *pHostFrameData);
@@ -105,7 +109,6 @@ uint8_t HR_ProcessData(const TsFrameData *pHostFrameData, TeDataSources from);
 
 uint8_t HR_GenerateRawFrame(TsRawFrameData* pRawData
     , uint8_t c1,TeFrameC2 c2, const uint8_t* p_src, uint8_t src_len);
-
 
 
 #endif // !__BSP_HISTORY_READING_H__

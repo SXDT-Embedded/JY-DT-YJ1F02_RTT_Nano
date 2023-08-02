@@ -137,7 +137,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="common/MultiTimer|common/letter-shell|common/AT Command|Startup/startup_ch32v20x_D8W.S|Startup/startup_ch32v20x_D8.S" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="bsp/inc/bsp_uart.h|bsp/src/bsp_uart.c|common/MultiTimer|common/letter-shell|common/AT Command|Startup/startup_ch32v20x_D8W.S|Startup/startup_ch32v20x_D8.S" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

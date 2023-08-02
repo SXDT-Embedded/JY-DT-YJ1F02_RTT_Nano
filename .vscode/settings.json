@@ -27,7 +27,8 @@
         "bsp_buzzer.h": "c",
         "bsp_button.h": "c",
         "pin.h": "c",
-        "bsp_vin_detection.h": "c"
+        "bsp_vin_detection.h": "c",
+        "bsp_history_reading.h": "c"
     },
     "commentTranslate.hover.enabled": false,
     "commentTranslate.targetLanguage": "zh-CN"

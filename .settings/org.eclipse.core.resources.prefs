@@ -13,6 +13,7 @@ encoding//bsp/inc/bsp_sys.h=UTF-8
 encoding//bsp/src/bsp_adc.c=UTF-8
 encoding//bsp/src/bsp_buzzer.c=UTF-8
 encoding//bsp/src/bsp_flash.c=UTF-8
+encoding//bsp/src/bsp_history_reading.c=UTF-8
 encoding//bsp/src/bsp_led.c=GBK
 encoding//bsp/src/bsp_mq.c=UTF-8
 encoding//bsp/src/bsp_rtc.c=UTF-8
