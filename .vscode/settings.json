@@ -26,7 +26,8 @@
         "bsp_emv.h": "c",
         "bsp_buzzer.h": "c",
         "bsp_button.h": "c",
-        "pin.h": "c"
+        "pin.h": "c",
+        "bsp_vin_detection.h": "c"
     },
     "commentTranslate.hover.enabled": false,
     "commentTranslate.targetLanguage": "zh-CN"
