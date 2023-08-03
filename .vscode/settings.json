@@ -29,7 +29,9 @@
         "pin.h": "c",
         "bsp_vin_detection.h": "c",
         "bsp_history_reading.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "lwrb.h": "c",
+        "bsp_wdg.h": "c"
     },
     "commentTranslate.hover.enabled": false,
     "commentTranslate.targetLanguage": "zh-CN"

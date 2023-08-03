@@ -1,6 +1,6 @@
 #include "board.h"
 #include <rtdevice.h>
-#include "drv_usart.h"
+#include "drv_uart.h"
 
 #define LOG_TAG     "drv_usart"          // 该模块对应的标签。不定义时，默认：NO_TAG
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
@@ -463,57 +463,61 @@ static struct TsCh32Uart ch32_uart_config[] =
 
 // USART RX buffer for DMA to transfer every received byte
 // Contains raw data that are about to be processed by different events
-uint8_t usart1_rx_dma_buffer[USART1_RX_BUFFER_LENGTH] = {0};
-uint8_t usart2_rx_dma_buffer[USART2_RX_BUFFER_LENGTH] = {0};
-uint8_t usart3_rx_dma_buffer[USART3_RX_BUFFER_LENGTH] = {0};
-
-lwrb_t usart1_rx_rb;
-// Ring buffer data array for RX DMA
-uint8_t usart1_rx_rb_data[USART1_RX_BUFFER_LENGTH];
-
-// Ring buffer instance for RX data
-lwrb_t usart2_rx_rb;
-// Ring buffer data array for RX DMA
-uint8_t usart2_rx_rb_data[USART2_RX_BUFFER_LENGTH];
-
-lwrb_t usart3_rx_rb;
-// Ring buffer data array for RX DMA
-uint8_t usart3_rx_rb_data[USART3_RX_BUFFER_LENGTH];
+static uint8_t _uart1_rx_dma_buffer[UART1_RX_BUFFER_LENGTH] = {0};
+static uint8_t _uart2_rx_dma_buffer[UART2_RX_BUFFER_LENGTH] = {0};
+static uint8_t _uart3_rx_dma_buffer[UART3_RX_BUFFER_LENGTH] = {0};
 
 //  Ring buffer instance for TX data
-lwrb_t usart1_tx_rb;
-lwrb_t usart2_tx_rb;
-lwrb_t usart3_tx_rb;
-
+lwrb_t uart1_tx_rb;
 // Ring buffer data array for TX DMA
-uint8_t usart1_tx_rb_data[USART1_TX_RB_LENGTH];
-uint8_t usart2_tx_rb_data[USART2_TX_RB_LENGTH];
-uint8_t usart3_tx_rb_data[USART3_TX_RB_LENGTH];
+uint8_t uart1_tx_rb_data[UART1_TX_RB_LENGTH];
+// Ring buffer instance for RX data
+lwrb_t uart1_rx_rb;
+// Ring buffer data array for RX DMA
+uint8_t uart1_rx_rb_data[UART1_RX_RB_LENGTH];
+
+lwrb_t uart2_tx_rb;
+uint8_t uart2_tx_rb_data[UART2_TX_RB_LENGTH];
+lwrb_t uart2_rx_rb;
+uint8_t uart2_rx_rb_data[UART2_RX_RB_LENGTH];
+
+lwrb_t uart3_tx_rb;
+uint8_t uart3_tx_rb_data[UART3_TX_RB_LENGTH];
+lwrb_t uart3_rx_rb;
+uint8_t uart3_rx_rb_data[UART2_RX_RB_LENGTH];
 
 // Length of currently active TX DMA transfer
-volatile size_t usart1_tx_dma_current_len;
-volatile size_t usart2_tx_dma_current_len;
-volatile size_t usart3_tx_dma_current_len;
+volatile size_t _uart1_tx_dma_current_len;
+volatile size_t _uart2_tx_dma_current_len;
+volatile size_t _uart3_tx_dma_current_len;
 
-struct rt_event uart1_event;
-struct rt_event uart2_event;
-struct rt_event uart3_event;
+// struct rt_event uart1_event;
+// struct rt_event uart2_event;
+// struct rt_event uart3_event;
+
+ALIGN(RT_ALIGN_SIZE)
+static char uart1_dma_rx_thread_stack[UART1_DMA_RX_THREAD_STACK_SIZE];
+static struct rt_thread uart1_dma_rx_thread;
+
+ALIGN(RT_ALIGN_SIZE)
+static char uart2_dma_rx_thread_stack[UART2_DMA_RX_THREAD_STACK_SIZE];
+static struct rt_thread uart2_dma_rx_thread;
+
+ALIGN(RT_ALIGN_SIZE)
+static char uart3_dma_rx_thread_stack[UART3_DMA_RX_THREAD_STACK_SIZE];
+static struct rt_thread uart3_dma_rx_thread;
 
 rt_sem_t uart1_rx_check_sem = RT_NULL;
+rt_sem_t uart1_rx_ok_sem = RT_NULL;
+rt_sem_t uart1_rx_parity_err_sem = RT_NULL;
+
 rt_sem_t uart2_rx_check_sem = RT_NULL;
+rt_sem_t uart2_rx_ok_sem = RT_NULL;
+rt_sem_t uart2_rx_parity_err_sem = RT_NULL;
+
 rt_sem_t uart3_rx_check_sem = RT_NULL;
-
-rt_sem_t uart1_revok_sem = RT_NULL;
-rt_sem_t uart2_revok_sem = RT_NULL;
-rt_sem_t uart3_revok_sem = RT_NULL;
-
-rt_sem_t uart1_rev_parity_sem = RT_NULL;
-rt_sem_t uart2_rev_parity_sem = RT_NULL;
-rt_sem_t uart3_rev_parity_sem = RT_NULL;
-
-static rt_thread_t uart1_rx_dma_thread = RT_NULL;
-static rt_thread_t uart2_rx_dma_thread = RT_NULL;
-static rt_thread_t uart3_rx_dma_thread = RT_NULL;
+rt_sem_t uart3_rx_ok_sem = RT_NULL;
+rt_sem_t uart3_rx_parity_err_sem = RT_NULL;
 
 void USART1_IRQHandler(void) __attribute__((interrupt()));
 void USART2_IRQHandler(void) __attribute__((interrupt()));
@@ -535,163 +539,141 @@ void DMA1_Channel3_IRQHandler(void) __attribute__((interrupt()));
 // USART3 - TX
 void DMA1_Channel2_IRQHandler(void) __attribute__((interrupt()));
 
-void USART1_RxCheck(void);
-void USART1_ProcessData(const void* data, size_t len);
-
-void USART2_RxCheck(void);
-void USART2_ProcessData(const void* data, size_t len);
-void USART2_SendString(const char* str);
-uint8_t USART2_StartTxDMATransfer(void);
-
-void USART3_RxCheck(void);
-void USART3_ProcessData(const void* data, size_t len);
-void USART3_SendString(const char* str);
-uint8_t USART3_StartTxDMATransfer(void);
-
-void USART_SendByte(USART_TypeDef *pUSARTx, const uint16_t data)
+// 阻塞式发送的
+#ifdef UART_USE_POLLING_TX
+void UART_SendByte(USART_TypeDef *pUSARTx, const uint16_t data)
 {
 	/* 发送一个字节数据到USART */
     USART_SendData(pUSARTx, data);
-
     /* 等待发送数据寄存器为空 */
     while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);
 }
 
-void USART_SendString(USART_TypeDef *pUSARTx, const char *str)
+void UART_SendString(USART_TypeDef *pUSARTx, const char *str)
 {
     uint16_t i = 0;
     do {
-            USART_SendByte( pUSARTx, *(str + i) );
+            UART_SendByte( pUSARTx, *(str + i) );
             i++;
         } while (*(str + i)!='\0');
     /* 等待发送完成 */
     while(USART_GetFlagStatus(pUSARTx, USART_FLAG_TC) == RESET);
 }
 
-void USART_SendArray(USART_TypeDef *pUSARTx, const uint8_t *pdata, uint16_t len)
+void UART_SendArray(USART_TypeDef *pUSARTx, const uint8_t *pdata, uint16_t len)
 {
     while (len--)
     {
-         USART_SendByte( pUSARTx, *(pdata++) );
+         UART_SendByte( pUSARTx, *(pdata++) );
     }
     /* 等待发送完成 */
     while(USART_GetFlagStatus(pUSARTx, USART_FLAG_TC) == RESET);
 }
+#endif // !UART_USE_POLLING_TX
 
-void USART1_RxCheck(void)
+/**
+ * \brief           Process received data over UART1
+ * Data are written to RX ringbuffer for application processing at latter stage
+ * \param[in]       data: Data to process
+ * \param[in]       len: Length in units of bytes
+ */
+rt_inline void _UART1_ProcessData(const void* data, size_t len)
+{
+    /* Write data to receive buffer */
+    lwrb_write(&uart1_rx_rb, data, len);
+}
+
+rt_inline void _UART2_ProcessData(const void* data, size_t len)
+{
+    lwrb_write(&uart2_rx_rb, data, len);
+}
+
+rt_inline void _UART3_ProcessData(const void* data, size_t len)
+{
+    lwrb_write(&uart3_rx_rb, data, len);
+}
+
+static void _UART1_RxCheck(void)
 {
     static size_t old_pos;
     size_t pos;
 
-    // if(uart1_rev_parity_flag == 0)
-    if (RT_EOK != rt_sem_trytake(uart1_rev_parity_sem))
-    {
-        /* Calculate current position in buffer and check for new data available */
-        pos = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - DMA_GetCurrDataCounter(USART1_DMA_RX_CHANNEL);
+   /* Calculate current position in buffer and check for new data available */
+    pos = LWUTIL_ARRAYSIZE(_uart1_rx_dma_buffer) - DMA_GetCurrDataCounter(UART1_DMA_RX_CHANNEL);
 
-        /* Check change in received data */
-        if (pos != old_pos)
-        {
-            /* Current position is over previous one */
-            if (pos > old_pos)
-            {
-                USART1_ProcessData(&usart1_rx_dma_buffer[old_pos], pos - old_pos);
-            }
-            else
-            {
-                USART1_ProcessData(&usart1_rx_dma_buffer[old_pos], LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - old_pos);
-                if (pos > 0)
-                {
-                    USART1_ProcessData(&usart1_rx_dma_buffer[0], pos);
-                }
-            }
-            old_pos = pos;  /* Save current position as old for next transfers */
-        }
-    }
-    // TODO: 校验错误后的处理
-    else
+    /* Check change in received data */
+    if (pos != old_pos)
     {
-        pos = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer) - DMA_GetCurrDataCounter(USART1_DMA_RX_CHANNEL);
+        /* Current position is over previous one */
+        if (pos > old_pos)
+        {
+            _UART1_ProcessData(&_uart1_rx_dma_buffer[old_pos], pos - old_pos);
+        }
+        else
+        {
+            _UART1_ProcessData(&_uart1_rx_dma_buffer[old_pos], LWUTIL_ARRAYSIZE(_uart1_rx_dma_buffer) - old_pos);
+            if (pos > 0)
+            {
+                _UART1_ProcessData(&_uart1_rx_dma_buffer[0], pos);
+            }
+        }
         old_pos = pos;  /* Save current position as old for next transfers */
-        // uart1_rev_parity_flag = 0;
     }
 }
 
-void USART2_RxCheck(void)
+static void _UART2_RxCheck(void)
 {
     static size_t old_pos;
     size_t pos;
 
-    if (RT_EOK != rt_sem_trytake(uart2_rev_parity_sem))
-    // if(uart2_rev_parity_flag == 0)
-    {
-        /* Calculate current position in buffer and check for new data available */
-        pos = LWUTIL_ARRAYSIZE(usart2_rx_dma_buffer) - DMA_GetCurrDataCounter(USART2_DMA_RX_CHANNEL);
+    /* Calculate current position in buffer and check for new data available */
+    pos = LWUTIL_ARRAYSIZE(_uart2_rx_dma_buffer) - DMA_GetCurrDataCounter(UART2_DMA_RX_CHANNEL);
 
-        /* Check change in received data */
-        if (pos != old_pos)
-        {
-            /* Current position is over previous one */
-            if (pos > old_pos)
-            {
-                USART2_ProcessData(&usart2_rx_dma_buffer[old_pos], pos - old_pos);
-            }
-            else
-            {
-                USART2_ProcessData(&usart2_rx_dma_buffer[old_pos], LWUTIL_ARRAYSIZE(usart2_rx_dma_buffer) - old_pos);
-                if (pos > 0)
-                {
-                    USART2_ProcessData(&usart2_rx_dma_buffer[0], pos);
-                }
-            }
-            old_pos = pos;  /* Save current position as old for next transfers */
-        }
-    }
-    // TODO: 校验错误后的处理
-    else
+    /* Check change in received data */
+    if (pos != old_pos)
     {
-        pos = LWUTIL_ARRAYSIZE(usart2_rx_dma_buffer) - DMA_GetCurrDataCounter(USART2_DMA_RX_CHANNEL);
+        /* Current position is over previous one */
+        if (pos > old_pos)
+        {
+            _UART2_ProcessData(&_uart2_rx_dma_buffer[old_pos], pos - old_pos);
+        }
+        else
+        {
+            _UART2_ProcessData(&_uart2_rx_dma_buffer[old_pos], LWUTIL_ARRAYSIZE(_uart2_rx_dma_buffer) - old_pos);
+            if (pos > 0)
+            {
+                _UART2_ProcessData(&_uart2_rx_dma_buffer[0], pos);
+            }
+        }
         old_pos = pos;  /* Save current position as old for next transfers */
-        // uart2_rev_parity_flag = 0;
     }
 }
 
-void USART3_RxCheck(void)
+static void _UART3_RxCheck(void)
 {
     static size_t old_pos;
     size_t pos;
 
-    // if(uart3_rev_parity_flag == 0)
-    if (RT_EOK != rt_sem_trytake(uart3_rev_parity_sem))
-    {
-        /* Calculate current position in buffer and check for new data available */
-        pos = LWUTIL_ARRAYSIZE(usart3_rx_dma_buffer) - DMA_GetCurrDataCounter(USART3_DMA_RX_CHANNEL);
+    /* Calculate current position in buffer and check for new data available */
+    pos = LWUTIL_ARRAYSIZE(_uart3_rx_dma_buffer) - DMA_GetCurrDataCounter(UART3_DMA_RX_CHANNEL);
 
-        /* Check change in received data */
-        if (pos != old_pos)
-        {
-            /* Current position is over previous one */
-            if (pos > old_pos)
-            {
-                USART3_ProcessData(&usart3_rx_dma_buffer[old_pos], pos - old_pos);
-            }
-            else
-            {
-                USART3_ProcessData(&usart3_rx_dma_buffer[old_pos], LWUTIL_ARRAYSIZE(usart3_rx_dma_buffer) - old_pos);
-                if (pos > 0)
-                {
-                    USART3_ProcessData(&usart3_rx_dma_buffer[0], pos);
-                }
-            }
-            old_pos = pos;  /* Save current position as old for next transfers */
-        }
-    }
-    // TODO: 校验错误后的处理
-    else
+    /* Check change in received data */
+    if (pos != old_pos)
     {
-        pos = LWUTIL_ARRAYSIZE(usart3_rx_dma_buffer) - DMA_GetCurrDataCounter(USART3_DMA_RX_CHANNEL);
+        /* Current position is over previous one */
+        if (pos > old_pos)
+        {
+            _UART3_ProcessData(&_uart3_rx_dma_buffer[old_pos], pos - old_pos);
+        }
+        else
+        {
+            _UART3_ProcessData(&_uart3_rx_dma_buffer[old_pos], LWUTIL_ARRAYSIZE(_uart3_rx_dma_buffer) - old_pos);
+            if (pos > 0)
+            {
+                _UART3_ProcessData(&_uart3_rx_dma_buffer[0], pos);
+            }
+        }
         old_pos = pos;  /* Save current position as old for next transfers */
-        // uart3_rev_parity_flag = 0;
     }
 }
 
@@ -699,22 +681,22 @@ void USART3_RxCheck(void)
  * \brief       Check if DMA is active and if not try to send data
  * \return      `1` if transfer just started, `0` if on-going or no data to transmit
  */
-uint8_t USART1_StartTxDMATransfer(void)
+static uint8_t _UART1_StartTxDMATransfer(void)
 {
     uint8_t started = 0;
     rt_enter_critical();
 
-    if (usart1_tx_dma_current_len == 0
-        && (usart1_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart1_tx_rb)) > 0)
+    if (_uart1_tx_dma_current_len == 0
+        && (_uart1_tx_dma_current_len = lwrb_get_linear_block_read_length(&uart1_tx_rb)) > 0)
     {
         /* Limit maximal size to transmit at a time */
-        // if (usart1_tx_dma_current_len > 256)
+        // if (_uart1_tx_dma_current_len > 256)
         // {
-        //     usart1_tx_dma_current_len = 256;
+        //     _uart1_tx_dma_current_len = 256;
         // }
 
         /* Disable channel if enabled */
-        DMA_Cmd(USART1_DMA_TX_CHANNEL, DISABLE);
+        DMA_Cmd(UART1_DMA_TX_CHANNEL, DISABLE);
 
         /* Clear all flags */
         DMA_ClearFlag(DMA1_FLAG_TC4);
@@ -722,12 +704,11 @@ uint8_t USART1_StartTxDMATransfer(void)
         DMA_ClearFlag(DMA1_FLAG_GL4);
         DMA_ClearFlag(DMA1_FLAG_TE4);
 
-        USART1_DMA_TX_CHANNEL->CNTR = usart1_tx_dma_current_len;
-        USART1_DMA_TX_CHANNEL->MADDR = (uint32_t)lwrb_get_linear_block_read_address(&usart1_tx_rb);
+        UART1_DMA_TX_CHANNEL->CNTR = _uart1_tx_dma_current_len;
+        UART1_DMA_TX_CHANNEL->MADDR = (uint32_t)lwrb_get_linear_block_read_address(&uart1_tx_rb);
 
         /* Start transfer */
-        DMA_Cmd(USART1_DMA_TX_CHANNEL, ENABLE);
-        // logDebug("USART1_StartTxDMATransfer");
+        DMA_Cmd(UART1_DMA_TX_CHANNEL, ENABLE);
 
         started = 1;
     }
@@ -740,20 +721,21 @@ uint8_t USART1_StartTxDMATransfer(void)
  * \brief       Check if DMA is active and if not try to send data
  * \return      `1` if transfer just started, `0` if on-going or no data to transmit
  */
-uint8_t USART2_StartTxDMATransfer(void)
+static uint8_t _UART2_StartTxDMATransfer(void)
 {
     uint8_t started = 0;
     rt_enter_critical();
 
-    if (usart2_tx_dma_current_len == 0
-        && (usart2_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart2_tx_rb)) > 0)
+    if (_uart2_tx_dma_current_len == 0
+        && (_uart2_tx_dma_current_len = lwrb_get_linear_block_read_length(&uart2_tx_rb)) > 0)
     {
         /* Disable channel if enabled */
-        DMA_Cmd(USART2_DMA_TX_CHANNEL, DISABLE);
+        DMA_Cmd(UART2_DMA_TX_CHANNEL, DISABLE);
 
         /* Limit maximal size to transmit at a time */
-        if (usart2_tx_dma_current_len > 32) {
-            usart2_tx_dma_current_len = 32;
+        if (_uart2_tx_dma_current_len > 32)
+        {
+            _uart2_tx_dma_current_len = 32;
         }
 
         /* Clear all flags */
@@ -762,12 +744,11 @@ uint8_t USART2_StartTxDMATransfer(void)
         DMA_ClearFlag(DMA1_FLAG_GL7);
         DMA_ClearFlag(DMA1_FLAG_TE7);
 
-        USART2_DMA_TX_CHANNEL->CNTR = usart2_tx_dma_current_len;
-        USART2_DMA_TX_CHANNEL->MADDR = (uint32_t)lwrb_get_linear_block_read_address(&usart2_tx_rb);
+        UART2_DMA_TX_CHANNEL->CNTR = _uart2_tx_dma_current_len;
+        UART2_DMA_TX_CHANNEL->MADDR = (uint32_t)lwrb_get_linear_block_read_address(&uart2_tx_rb);
 
         /* Start transfer */
-        DMA_Cmd(USART2_DMA_TX_CHANNEL, ENABLE);
-        // logDebug("USART2_StartTxDMATransfer");
+        DMA_Cmd(UART2_DMA_TX_CHANNEL, ENABLE);
 
         started = 1;
     }
@@ -776,17 +757,17 @@ uint8_t USART2_StartTxDMATransfer(void)
     return started;
 }
 
-uint8_t USART3_StartTxDMATransfer(void)
+static uint8_t _UART3_StartTxDMATransfer(void)
 {
     uint8_t started = 0;
 
     rt_enter_critical();
 
-    if (usart3_tx_dma_current_len == 0
-        && (usart3_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart3_tx_rb)) > 0)
+    if (_uart3_tx_dma_current_len == 0
+        && (_uart3_tx_dma_current_len = lwrb_get_linear_block_read_length(&uart3_tx_rb)) > 0)
     {
         /* Disable channel if enabled */
-        DMA_Cmd(USART3_DMA_TX_CHANNEL, DISABLE);
+        DMA_Cmd(UART3_DMA_TX_CHANNEL, DISABLE);
 
         /* Clear all flags */
         DMA_ClearFlag(DMA1_FLAG_TC2);
@@ -794,12 +775,11 @@ uint8_t USART3_StartTxDMATransfer(void)
         DMA_ClearFlag(DMA1_FLAG_GL2);
         DMA_ClearFlag(DMA1_FLAG_TE2);
 
-        USART3_DMA_TX_CHANNEL->CNTR = usart3_tx_dma_current_len;
-        USART3_DMA_TX_CHANNEL->MADDR = (uint32_t)lwrb_get_linear_block_read_address(&usart3_tx_rb);
+        UART3_DMA_TX_CHANNEL->CNTR = _uart3_tx_dma_current_len;
+        UART3_DMA_TX_CHANNEL->MADDR = (uint32_t)lwrb_get_linear_block_read_address(&uart3_tx_rb);
 
         /* Start transfer */
-        DMA_Cmd(USART3_DMA_TX_CHANNEL, ENABLE);
-        // logDebug("USART2_StartTxDMATransfer");
+        DMA_Cmd(UART3_DMA_TX_CHANNEL, ENABLE);
 
         started = 1;
     }
@@ -809,144 +789,125 @@ uint8_t USART3_StartTxDMATransfer(void)
     return started;
 }
 
-
-void USART1_ProcessData(const void* data, size_t len)
+rt_uint32_t UART1_Write(const void* data, size_t len)
 {
-    lwrb_write(&usart1_rx_rb, data, len);  /* Write data to receive buffer */
-    // rt_sem_release(uart1_rx_check_sem);
-//    LOG_D("USART1_ProcessData");
-}
-
-/**
- * \brief           Process received data over UART2
- * Data are written to RX ringbuffer for application processing at latter stage
- * \param[in]       data: Data to process
- * \param[in]       len: Length in units of bytes
- */
-void USART2_ProcessData(const void* data, size_t len)
-{
-    lwrb_write(&usart2_rx_rb, data, len);
-}
-
-void USART3_ProcessData(const void* data, size_t len)
-{
-    lwrb_write(&usart3_rx_rb, data, len);
-}
-
-/**
- * \brief           Send string to USART1
- * \param[in]       str: String to send
- */
-void USART1_SendString(const char* str)
-{
-    lwrb_write(&usart1_tx_rb, str, strlen(str)); /* Write data to TX buffer for loopback */
-    USART1_StartTxDMATransfer();              /* Then try to start transfer */
-}
-
-/**
- * \brief           Send Array to USART1
- * \param[in]       str: Array to send
- */
-void USART1_SendArray(const void* data, size_t len)
-{
-    lwrb_write(&usart1_tx_rb, data, len);
-    USART1_StartTxDMATransfer();
-}
-
-/**
- * \brief           Send string to USART2
- * \param[in]       str: String to send
- */
-void USART2_SendString(const char* str)
-{
-    lwrb_write(&usart2_tx_rb, str, strlen(str)); /* Write data to TX buffer for loopback */
-    USART2_StartTxDMATransfer();              /* Then try to start transfer */
-}
-
-/**
- * \brief           Send Array to USART2
- * \param[in]       str: Array to send
- */
-void USART2_SendArray(const void* data, size_t len)
-{
-    if (lwrb_get_free(&usart2_tx_rb) >= len)
+    rt_uint32_t ret = 0;
+    if (lwrb_get_free(&uart1_tx_rb) >= len)
     {
-        lwrb_write(&usart2_tx_rb, data, len); /* Write data to TX buffer for loopback */
-        USART2_StartTxDMATransfer();              /* Then try to start transfer */
+        ret = lwrb_write(&uart1_tx_rb, data, len);
+        _UART1_StartTxDMATransfer(); /* Then try to start transfer */
     }
-}
-
-void USART3_SendString(const char* str)
-{
-    lwrb_write(&usart3_tx_rb, str, strlen(str)); /* Write data to TX buffer for loopback */
-    USART3_StartTxDMATransfer();              /* Then try to start transfer */
-}
-
-unsigned int USART3_SendArray(const void* data, unsigned int len)
-{
-    unsigned int ret;
-    ret = lwrb_write(&usart3_tx_rb, (uint8_t *)data, len); /* Write data to TX buffer for loopback */
-    USART3_StartTxDMATransfer();              /* Then try to start transfer */
     return ret;
 }
 
-unsigned int UART3_Read(void *buf, unsigned int len)
+/**
+ * \brief           Send string to UART1
+ * \param[in]       str: String to send
+ */
+rt_uint32_t UART1_SendString(const char* str)
 {
-    return lwrb_read(&usart3_rx_rb, buf, len);
+    rt_uint32_t ret = 0;
+    rt_uint32_t len = rt_strlen(str);
+    UART1_Write(str, len);
+    return ret;
+}
+
+rt_uint32_t UART2_Write(const void* data, size_t len)
+{
+    rt_uint32_t ret = 0;
+    if (lwrb_get_free(&uart2_tx_rb) >= len)
+    {
+        ret = lwrb_write(&uart2_tx_rb, data, len);
+        _UART2_StartTxDMATransfer(); /* Then try to start transfer */
+    }
+
+    return ret;
+}
+
+/**
+ * \brief           Send string to UART2
+ * \param[in]       str: String to send
+ */
+rt_uint32_t UART2_SendString(const char* str)
+{
+    rt_uint32_t ret = 0;
+    rt_uint32_t len = rt_strlen(str);
+    UART2_Write(str, len);
+    return ret;
+}
+
+rt_uint32_t UART3_Write(const void* data, size_t len)
+{
+    rt_uint32_t ret = 0;
+    if (lwrb_get_free(&uart3_tx_rb) >= len)
+    {
+        ret = lwrb_write(&uart3_tx_rb, data, len);
+        _UART3_StartTxDMATransfer(); /* Then try to start transfer */
+    }
+    return ret;
+}
+
+/**
+ * \brief           Send string to UART3
+ * \param[in]       str: String to send
+ */
+rt_uint32_t UART3_SendString(const char* str)
+{
+    rt_uint32_t ret = 0;
+    rt_uint32_t len = rt_strlen(str);
+    UART3_Write(str, len);
+    return ret;
+}
+
+rt_uint32_t UART3_Read(void *buf, rt_uint32_t len)
+{
+    return lwrb_read(&uart3_rx_rb, buf, len);
 }
 
 static void uart1_rx_dma_thread_entry(void* parameter)
 {
-    rt_kprintf("uart1_rx_dma_thread_entry\r\n");
+    LOG_D("uart1_rx_dma_thread_entry");
 
     while (1)
     {
         rt_sem_take(uart1_rx_check_sem, RT_WAITING_FOREVER);
-        // if (rt_sem_take(uart1_rx_check_sem, RT_WAITING_FOREVER))
-        // {
-        //     USART1_RxCheck();
-        // }
-        // LOG_D("uart1_rx_check_sem");
-        USART1_RxCheck();
-        // rt_thread_mdelay(10);
+        _UART1_RxCheck();
     }
 }
 
 static void uart2_rx_dma_thread_entry(void* parameter)
 {
-    LOG_D("uart2_rx_dma_thread_entry\r\n");
+    LOG_D("uart2_rx_dma_thread_entry");
 
     while (1)
     {
         rt_sem_take(uart2_rx_check_sem, RT_WAITING_FOREVER);
-        // LOG_D("USART2_RxCheck");
-        USART2_RxCheck();
+        _UART2_RxCheck();
     }
 }
 
 static void uart3_rx_dma_thread_entry(void* parameter)
 {
-    LOG_D("uart3_rx_dma_thread_entry\r\n");
+    LOG_D("uart3_rx_dma_thread_entry");
 
     while (1)
     {
         rt_sem_take(uart3_rx_check_sem, RT_WAITING_FOREVER);
-        LOG_D("uart3_rx_check_sem");
-        USART3_RxCheck();
+        _UART3_RxCheck();
     }
 }
 
 // TODO: 用预编译BSP_USING_UART1
-void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
+void UART1_Init(uint32_t baudrate, TeUsartParityMode parity)
 {
     GPIO_InitTypeDef GPIO_InitStructure = {0};
     USART_InitTypeDef USART_InitStructure = {0};
     NVIC_InitTypeDef NVIC_InitStructure = {0};
-    DMA_InitTypeDef DMA_InitStructure = {0};			// DMA 配置
+    DMA_InitTypeDef DMA_InitStructure = {0};    // DMA 配置
 
     /* Initialize ringbuff */
-    lwrb_init(&usart1_rx_rb, usart1_rx_rb_data, sizeof(usart1_rx_rb_data));
-    lwrb_init(&usart1_tx_rb, usart1_tx_rb_data, sizeof(usart1_tx_rb_data));
+    lwrb_init(&uart1_rx_rb, uart1_rx_rb_data, sizeof(uart1_rx_rb_data));
+    lwrb_init(&uart1_tx_rb, uart1_tx_rb_data, sizeof(uart1_tx_rb_data));
 
     USART_DeInit(USART1);   // 寄存器恢复默认值
 
@@ -956,14 +917,14 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     /* 串口1 GPIO引脚初始化 */
     /* USART1 TX-->A.9   RX-->A.10 */
-    GPIO_InitStructure.GPIO_Pin = USART1_TX_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Pin = UART1_TX_GPIO_PIN;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_Init(USART1_TX_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_Init(UART1_TX_GPIO_PORT, &GPIO_InitStructure);
 
-    GPIO_InitStructure.GPIO_Pin = USART1_RX_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Pin = UART1_RX_GPIO_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(USART1_RX_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_Init(UART1_RX_GPIO_PORT, &GPIO_InitStructure);
 
     // USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
     // USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
@@ -972,11 +933,11 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
     /* 串口DMA配置 */
 #if 1
     /* UART1 RX DMA init */
-    DMA_DeInit(USART1_DMA_RX_CHANNEL);  // DMA1 通道5,寄存器复位, uart1_rx
+    DMA_DeInit(UART1_DMA_RX_CHANNEL);  // DMA1 通道5,寄存器复位, uart1_rx
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&USART1->DATAR);
-    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart1_rx_dma_buffer; // 接收内存地址，从哪里接收
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)_uart1_rx_dma_buffer; // 接收内存地址，从哪里接收
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-    DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(usart1_rx_dma_buffer);
+    DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(_uart1_rx_dma_buffer);
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -984,14 +945,14 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init(USART1_DMA_RX_CHANNEL, &DMA_InitStructure);
+    DMA_Init(UART1_DMA_RX_CHANNEL, &DMA_InitStructure);
 #endif
     // /* UART1 TX DMA init */
-    DMA_DeInit(USART1_DMA_TX_CHANNEL);  // DMA1 通道4,寄存器复位, uart1_tx
+    DMA_DeInit(UART1_DMA_TX_CHANNEL);  // DMA1 通道4,寄存器复位, uart1_tx
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&USART1->DATAR);
-    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart1_tx_rb_data;  //传输再修改地址，并使能该通道
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)uart1_tx_rb_data;  //传输再修改地址，并使能该通道
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-    DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(usart1_tx_rb_data);
+    DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(uart1_tx_rb_data);
     // DMA_InitStructure.DMA_BufferSize = (uint32_t)0;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
@@ -1000,23 +961,27 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
     DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init(USART1_DMA_TX_CHANNEL, &DMA_InitStructure);
+    DMA_Init(UART1_DMA_TX_CHANNEL, &DMA_InitStructure);
 
     /* Enable HT & TC interrupts for RX */
-    DMA_ITConfig(USART1_DMA_RX_CHANNEL, DMA_IT_HT, ENABLE);
-    DMA_ITConfig(USART1_DMA_RX_CHANNEL, DMA_IT_TC, ENABLE);
+    DMA_ITConfig(UART1_DMA_RX_CHANNEL, DMA_IT_HT, ENABLE);
+    DMA_ITConfig(UART1_DMA_RX_CHANNEL, DMA_IT_TC, ENABLE);
 
     /* Enable TC interrupts for TX */
-    DMA_ITConfig(USART1_DMA_TX_CHANNEL, DMA_IT_TC, ENABLE);
+    DMA_ITConfig(UART1_DMA_TX_CHANNEL, DMA_IT_TC, ENABLE);
 
+    /* 应用程序必须确保 DMA 和 UART 中断使用相同的抢占优先级。
+        这是保证处理功能永远不会被自身抢占的唯一配置
+        （DMA 中断抢占 UART，或相反），否则最后已知的读取位置可能会损坏
+        ，并且应用程序将使用错误的数据进行操作。*/
     /* DMA interrupt init for RX & TX */
-    NVIC_InitStructure.NVIC_IRQChannel = USART1_DMA_TX_IRQ_CHANNEL;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannel = UART1_DMA_TX_IRQ_CHANNEL;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
-    NVIC_InitStructure.NVIC_IRQChannel = USART1_DMA_RX_IRQ_CHANNEL;
+    NVIC_InitStructure.NVIC_IRQChannel = UART1_DMA_RX_IRQ_CHANNEL;
     NVIC_Init(&NVIC_InitStructure);
 
     /* Initialize UART1 */
@@ -1055,57 +1020,57 @@ void USART1_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     /* UART interrupt */
     NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
     // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
     /* Enable UART and DMA */
-    DMA_Cmd(USART1_DMA_RX_CHANNEL, ENABLE);
-    DMA_Cmd(USART1_DMA_TX_CHANNEL, DISABLE);
+    DMA_Cmd(UART1_DMA_RX_CHANNEL, ENABLE);
+    DMA_Cmd(UART1_DMA_TX_CHANNEL, DISABLE);
 
     USART_Cmd(USART1, ENABLE);
-    LOG_D("USART1 Init\r\n");
+    LOG_I("USART1 Init");
 }
 
-static int UART1_SemCreate(void)
+static int _UART1_SemCreate(void)
 {
-    uart1_rev_parity_sem = rt_sem_create("uart1_rev_parity_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart1_rev_parity_sem != RT_NULL)
+    uart1_rx_parity_err_sem = rt_sem_create("uart1_rx_parity_err_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart1_rx_parity_err_sem != RT_NULL)
     {
-        LOG_D("uart1_rev_parity_sem create");
+        LOG_D("create uart1_rev_parity_err_sem");
     }
 
     uart1_rx_check_sem = rt_sem_create("uart1_rx_check_sem", 0, RT_IPC_FLAG_PRIO);
     if (uart1_rx_check_sem != RT_NULL)
     {
-        LOG_D("uart1_rx_check_sem create");
+        LOG_D("create uart1_rx_check_sem create");
     }
-    // RT_ASSERT(uart1_rx_check_sem != RT_NULL);
 
-    uart1_revok_sem = rt_sem_create("uart1_revok_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart1_revok_sem != RT_NULL)
+    uart1_rx_ok_sem = rt_sem_create("uart1_rx_ok_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart1_rx_ok_sem != RT_NULL)
     {
-        LOG_D("uart1_revok_sem create");
+        LOG_D("create uart1_rx_ok_sem create");
     }
 
-    uart1_rx_dma_thread = rt_thread_create("uart1_rx_dma_thread"
+    if (rt_thread_init(&uart1_dma_rx_thread, "uart1_dma_rx_thread"
                             , uart1_rx_dma_thread_entry
                             , RT_NULL
-                            , 512
-                            , 5
-                            , 5);
-    if (uart1_rx_dma_thread != RT_NULL)
+                            , &uart1_dma_rx_thread_stack[0]
+                            , UART1_DMA_RX_THREAD_STACK_SIZE
+                            , UART1_DMA_RX_THREAD_PRIORITY
+                            , UART1_DMA_RX_THREAD_TIMESLICE)
+            == RT_EOK)
     {
-        LOG_D("rt_thread_startup(uart1_rx_dma_thread) = %d"
-            , rt_thread_startup(uart1_rx_dma_thread));
+        LOG_D("startup uart1_dma_rx_thread = %d"
+            , rt_thread_startup(&uart1_dma_rx_thread));
     }
 
     return 0;
 }
-INIT_PREV_EXPORT(UART1_SemCreate);
+INIT_PREV_EXPORT(_UART1_SemCreate);
 
-void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
+void UART2_Init(uint32_t baudrate, TeUsartParityMode parity)
 {
     GPIO_InitTypeDef GPIO_InitStructure = {0};
     USART_InitTypeDef USART_InitStructure = {0};
@@ -1113,8 +1078,8 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_InitTypeDef DMA_InitStructure = {0};			// DMA 配置
 
     /* Initialize ringbuff for TX & RX */
-    lwrb_init(&usart2_rx_rb, usart2_rx_rb_data, sizeof(usart2_rx_rb_data));
-    lwrb_init(&usart2_tx_rb, usart2_tx_rb_data, sizeof(usart2_tx_rb_data));
+    lwrb_init(&uart2_rx_rb, uart2_rx_rb_data, sizeof(uart2_rx_rb_data));
+    lwrb_init(&uart2_tx_rb, uart2_tx_rb_data, sizeof(uart2_tx_rb_data));
     // lwrb_set_evt_fn(&uart2_rx_fifo, USART2_BufferEvent);
 
     USART_DeInit(USART2);   // 寄存器恢复默认值
@@ -1125,14 +1090,14 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     /* 串口2 GPIO引脚初始化 */
     /* USART2 TX-->A.2   RX-->A.3 */
-    GPIO_InitStructure.GPIO_Pin = USART2_TX_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Pin = UART2_TX_GPIO_PIN;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_Init(USART2_TX_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_Init(UART2_TX_GPIO_PORT, &GPIO_InitStructure);
 
-    GPIO_InitStructure.GPIO_Pin = USART2_RX_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Pin = UART2_RX_GPIO_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(USART2_RX_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_Init(UART2_RX_GPIO_PORT, &GPIO_InitStructure);
 
     // USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
     // USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
@@ -1140,11 +1105,11 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     /* 串口DMA配置 */
     /* UART2 RX DMA init */
-    DMA_DeInit(USART2_DMA_RX_CHANNEL);  // DMA1 通道6,寄存器复位, uart2_rx
+    DMA_DeInit(UART2_DMA_RX_CHANNEL);  // DMA1 通道6,寄存器复位, uart2_rx
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&USART2->DATAR); /* USART2->DATAR:0x40004404 */
-    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart2_rx_dma_buffer; // 接收内存地址，从哪里接收
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)_uart2_rx_dma_buffer; // 接收内存地址，从哪里接收
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-    DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(usart2_rx_dma_buffer);
+    DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(_uart2_rx_dma_buffer);
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -1152,14 +1117,14 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init(USART2_DMA_RX_CHANNEL, &DMA_InitStructure);
+    DMA_Init(UART2_DMA_RX_CHANNEL, &DMA_InitStructure);
 
     // /* UART2 TX DMA init */
-    DMA_DeInit(USART2_DMA_TX_CHANNEL);  // DMA1 通道7,寄存器复位, uart2_tx
+    DMA_DeInit(UART2_DMA_TX_CHANNEL);  // DMA1 通道7,寄存器复位, uart2_tx
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&USART2->DATAR); /* USART2->DATAR:0x40004404 */
-    // DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart2_tx_rb_data;  //传输再修改地址，并使能该通道
+    // DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)uart2_tx_rb_data;  //传输再修改地址，并使能该通道
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-    // DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(usart2_tx_rb_data);
+    // DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(uart2_tx_rb_data);
     // DMA_InitStructure.DMA_BufferSize = (uint32_t)0;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
@@ -1168,23 +1133,23 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
     DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init(USART2_DMA_TX_CHANNEL, &DMA_InitStructure);
+    DMA_Init(UART2_DMA_TX_CHANNEL, &DMA_InitStructure);
 
     /* Enable HT & TC interrupts for RX */
-    DMA_ITConfig(USART2_DMA_RX_CHANNEL, DMA_IT_HT, ENABLE);
-    DMA_ITConfig(USART2_DMA_RX_CHANNEL, DMA_IT_TC, ENABLE);
+    DMA_ITConfig(UART2_DMA_RX_CHANNEL, DMA_IT_HT, ENABLE);
+    DMA_ITConfig(UART2_DMA_RX_CHANNEL, DMA_IT_TC, ENABLE);
 
     /* Enable TC interrupts for TX */
-    DMA_ITConfig(USART2_DMA_TX_CHANNEL, DMA_IT_TC, ENABLE);
+    DMA_ITConfig(UART2_DMA_TX_CHANNEL, DMA_IT_TC, ENABLE);
 
     /* DMA interrupt init for RX & TX */
-    NVIC_InitStructure.NVIC_IRQChannel = USART2_DMA_RX_IRQ_CHANNEL;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannel = UART2_DMA_RX_IRQ_CHANNEL;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
-    NVIC_InitStructure.NVIC_IRQChannel = USART2_DMA_TX_IRQ_CHANNEL;
+    NVIC_InitStructure.NVIC_IRQChannel = UART2_DMA_TX_IRQ_CHANNEL;
     NVIC_Init(&NVIC_InitStructure);
 
     /* Initialize UART2 */
@@ -1222,56 +1187,56 @@ void USART2_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     /* UART interrupt */
     NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
     // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
     /* Enable UART and DMA */
-    DMA_Cmd(USART2_DMA_RX_CHANNEL, ENABLE);
-    DMA_Cmd(USART2_DMA_TX_CHANNEL, DISABLE);
+    DMA_Cmd(UART2_DMA_RX_CHANNEL, ENABLE);
+    DMA_Cmd(UART2_DMA_TX_CHANNEL, DISABLE);
 
     USART_Cmd(USART2, ENABLE);
 
-    LOG_D("USART2 Init");
+    LOG_I("USART2 Init");
 }
 
-static int UART2_SemCreate(void)
+static int _UART2_SemCreate(void)
 {
-    uart2_rev_parity_sem = rt_sem_create("uart2_rev_parity_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart2_rev_parity_sem != RT_NULL)
+    uart2_rx_parity_err_sem = rt_sem_create("uart2_rx_parity_err_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart2_rx_parity_err_sem != RT_NULL)
     {
-        LOG_D("uart2_rev_parity_sem create");
+        LOG_D("create uart2_rx_parity_err_sem");
     }
-
     uart2_rx_check_sem = rt_sem_create("uart2_rx_check_sem", 0, RT_IPC_FLAG_PRIO);
     if (uart2_rx_check_sem != RT_NULL)
     {
-        LOG_D("uart2_rx_check_sem create\r\n");
+        LOG_D("create uart2_rx_check_sem");
     }
-    uart2_revok_sem = rt_sem_create("uart2_revok_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart2_revok_sem != RT_NULL)
+    uart2_rx_ok_sem = rt_sem_create("uart2_rx_ok_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart2_rx_ok_sem != RT_NULL)
     {
-        LOG_D("uart2_revok_sem create\r\n");
+        LOG_D("create uart2_rx_ok_sem create");
     }
 
-    uart2_rx_dma_thread = rt_thread_create("uart2_rx_dma_thread"
+    if (rt_thread_init(&uart2_dma_rx_thread, "uart2_dma_rx_thread"
                             , uart2_rx_dma_thread_entry
                             , RT_NULL
-                            , 512
-                            , 3
-                            , 5);
-    if (uart2_rx_dma_thread != RT_NULL)
+                            , &uart2_dma_rx_thread_stack[0]
+                            , UART2_DMA_RX_THREAD_STACK_SIZE
+                            , UART2_DMA_RX_THREAD_PRIORITY
+                            , UART2_DMA_RX_THREAD_TIMESLICE)
+            == RT_EOK)
     {
-        LOG_D("rt_thread_startup(uart2_rx_dma_thread) = %d"
-            , rt_thread_startup(uart2_rx_dma_thread));
+        LOG_D("startup uart2_dma_rx_thread = %d"
+            , rt_thread_startup(&uart2_dma_rx_thread));
     }
 
     return 0;
 }
-INIT_PREV_EXPORT(UART2_SemCreate);
+INIT_PREV_EXPORT(_UART2_SemCreate);
 
-void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
+void UART3_Init(uint32_t baudrate, TeUsartParityMode parity)
 {
     GPIO_InitTypeDef GPIO_InitStructure = {0};
     USART_InitTypeDef USART_InitStructure = {0};
@@ -1279,8 +1244,8 @@ void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_InitTypeDef DMA_InitStructure = {0};			// DMA 配置
 
     /* Initialize ringbuff for TX & RX */
-    lwrb_init(&usart3_rx_rb, usart3_rx_rb_data, sizeof(usart3_rx_rb_data));
-    lwrb_init(&usart3_tx_rb, usart3_tx_rb_data, sizeof(usart3_tx_rb_data));
+    lwrb_init(&uart3_rx_rb, uart3_rx_rb_data, sizeof(uart3_rx_rb_data));
+    lwrb_init(&uart3_tx_rb, uart3_tx_rb_data, sizeof(uart3_tx_rb_data));
     // lwrb_set_evt_fn(&uart2_rx_fifo, USART2_BufferEvent);
 
     USART_DeInit(USART3);   // 寄存器恢复默认值
@@ -1293,14 +1258,14 @@ void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     /* 串口3 GPIO引脚初始化 */
     /* USART3 TX-->B.10   RX-->B.11 */
-    GPIO_InitStructure.GPIO_Pin = USART3_TX_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Pin = UART3_TX_GPIO_PIN;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_Init(USART3_TX_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_Init(UART3_TX_GPIO_PORT, &GPIO_InitStructure);
 
-    GPIO_InitStructure.GPIO_Pin = USART3_RX_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Pin = UART3_RX_GPIO_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(USART3_RX_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_Init(UART3_RX_GPIO_PORT, &GPIO_InitStructure);
 
     // USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
     // USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
@@ -1308,11 +1273,11 @@ void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
 
     /* 串口DMA配置 */
     /* UART2 RX DMA init */
-    DMA_DeInit(USART3_DMA_RX_CHANNEL);  // DMA1 通道6,寄存器复位, uart2_rx
+    DMA_DeInit(UART3_DMA_RX_CHANNEL);  // DMA1 通道6,寄存器复位, uart2_rx
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&USART3->DATAR); /* USART2->DATAR:0x40004404 */
-    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart3_rx_dma_buffer; // 接收内存地址，从哪里接收
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)_uart3_rx_dma_buffer; // 接收内存地址，从哪里接收
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-    DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(usart3_rx_dma_buffer);
+    DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(_uart3_rx_dma_buffer);
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -1320,14 +1285,14 @@ void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init(USART3_DMA_RX_CHANNEL, &DMA_InitStructure);
+    DMA_Init(UART3_DMA_RX_CHANNEL, &DMA_InitStructure);
 
     // /* UART2 TX DMA init */
-    DMA_DeInit(USART3_DMA_TX_CHANNEL);  // DMA1 通道7,寄存器复位, uart3_tx
+    DMA_DeInit(UART3_DMA_TX_CHANNEL);  // DMA1 通道7,寄存器复位, uart3_tx
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&USART3->DATAR); /* USART3->DATAR:0x40004404 */
-    // DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)usart3_tx_rb_data;  //传输再修改地址，并使能该通道
+    // DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)uart3_tx_rb_data;  //传输再修改地址，并使能该通道
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-    // DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(usart3_tx_rb_data);
+    // DMA_InitStructure.DMA_BufferSize = LWUTIL_ARRAYSIZE(uart3_tx_rb_data);
     // DMA_InitStructure.DMA_BufferSize = (uint32_t)0;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
@@ -1336,23 +1301,23 @@ void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
     DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init(USART3_DMA_TX_CHANNEL, &DMA_InitStructure);
+    DMA_Init(UART3_DMA_TX_CHANNEL, &DMA_InitStructure);
 
     /* Enable HT & TC interrupts for RX */
-    DMA_ITConfig(USART3_DMA_RX_CHANNEL, DMA_IT_HT, ENABLE);
-    DMA_ITConfig(USART3_DMA_RX_CHANNEL, DMA_IT_TC, ENABLE);
+    DMA_ITConfig(UART3_DMA_RX_CHANNEL, DMA_IT_HT, ENABLE);
+    DMA_ITConfig(UART3_DMA_RX_CHANNEL, DMA_IT_TC, ENABLE);
 
     /* Enable TC interrupts for TX */
-    DMA_ITConfig(USART3_DMA_TX_CHANNEL, DMA_IT_TC, ENABLE);
+    DMA_ITConfig(UART3_DMA_TX_CHANNEL, DMA_IT_TC, ENABLE);
 
     /* DMA interrupt init for RX & TX */
-    NVIC_InitStructure.NVIC_IRQChannel = USART3_DMA_RX_IRQ_CHANNEL;
+    NVIC_InitStructure.NVIC_IRQChannel = UART3_DMA_RX_IRQ_CHANNEL;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
-    NVIC_InitStructure.NVIC_IRQChannel = USART3_DMA_TX_IRQ_CHANNEL;
+    NVIC_InitStructure.NVIC_IRQChannel = UART3_DMA_TX_IRQ_CHANNEL;
     NVIC_Init(&NVIC_InitStructure);
 
     /* Initialize UART2 */
@@ -1396,53 +1361,50 @@ void USART3_Init(uint32_t baudrate, TeUsartParityMode parity)
     NVIC_Init(&NVIC_InitStructure);
 
     /* Enable UART and DMA */
-    DMA_Cmd(USART3_DMA_RX_CHANNEL, ENABLE);
-    DMA_Cmd(USART3_DMA_TX_CHANNEL, DISABLE);
+    DMA_Cmd(UART3_DMA_RX_CHANNEL, ENABLE);
+    DMA_Cmd(UART3_DMA_TX_CHANNEL, DISABLE);
 
     USART_Cmd(USART3, ENABLE);
 
-    LOG_D("USART3 Init");
+    LOG_I("USART3 Init");
 }
 
-static int UART3_SemCreate(void)
+static int _UART3_SemCreate(void)
 {
-    uart3_rev_parity_sem = rt_sem_create("uart3_rev_parity_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart3_rev_parity_sem != RT_NULL)
+    uart3_rx_parity_err_sem = rt_sem_create("uart3_rx_parity_err_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart3_rx_parity_err_sem != RT_NULL)
     {
-        LOG_D("uart3_rev_parity_sem create");
+        LOG_D("create uart3_rx_parity_err_sem");
     }
-
     uart3_rx_check_sem = rt_sem_create("uart3_rx_check_sem", 0, RT_IPC_FLAG_PRIO);
     if (uart3_rx_check_sem != RT_NULL)
     {
-        LOG_D("uart3_rx_check_sem create\r\n");
+        LOG_D("create uart3_rx_check_sem create");
     }
-    uart3_revok_sem = rt_sem_create("uart3_revok_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart3_revok_sem != RT_NULL)
+    uart3_rx_ok_sem = rt_sem_create("uart3_rx_ok_sem", 0, RT_IPC_FLAG_PRIO);
+    if (uart3_rx_ok_sem != RT_NULL)
     {
-        LOG_D("uart3_revok_sem create\r\n");
+        LOG_D("create uart3_rx_ok_sem create");
     }
 
-    uart3_rx_dma_thread = rt_thread_create("uart3_rx_dma_thread"
+    if (rt_thread_init(&uart3_dma_rx_thread, "uart3_dma_rx_thread"
                             , uart3_rx_dma_thread_entry
                             , RT_NULL
-                            , 512
-                            , 3
-                            , 5);
-    if (uart3_rx_dma_thread != RT_NULL)
+                            , &uart3_dma_rx_thread_stack[0]
+                            , UART3_DMA_RX_THREAD_STACK_SIZE
+                            , UART3_DMA_RX_THREAD_PRIORITY
+                            , UART3_DMA_RX_THREAD_TIMESLICE)
+            == RT_EOK)
     {
-        LOG_D("rt_thread_startup(uart3_rx_dma_thread) = %d"
-            , rt_thread_startup(uart3_rx_dma_thread));
+        LOG_D("startup uart3_dma_rx_thread = %d"
+            , rt_thread_startup(&uart3_dma_rx_thread));
     }
 
     return 0;
 }
-INIT_PREV_EXPORT(UART3_SemCreate);
+INIT_PREV_EXPORT(_UART3_SemCreate);
 
-/**
- * @description: DMA1 channel2 interrupt handler for UART3 TX
- * @return {*}
- */
+// DMA1 channel2 interrupt handler for UART3 TX
 void DMA1_Channel2_IRQHandler(void)
 {
     GET_INT_SP();
@@ -1453,9 +1415,9 @@ void DMA1_Channel2_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_TC2) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC2); /* Clear transfer complete flag */
-        lwrb_skip(&usart3_tx_rb, usart3_tx_dma_current_len);/* Skip buffer, it has been successfully sent out */
-        usart3_tx_dma_current_len = 0;           /* Reset data length */
-        USART3_StartTxDMATransfer();          /* Start new transfer */
+        lwrb_skip(&uart3_tx_rb, _uart3_tx_dma_current_len);/* Skip buffer, it has been successfully sent out */
+        _uart3_tx_dma_current_len = 0;      /* Reset data length */
+        _UART3_StartTxDMATransfer();        /* Start new transfer */
     }
 
     /* Implement other events when needed */
@@ -1476,7 +1438,7 @@ void DMA1_Channel3_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_HT3) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT3); /* Clear half-transfer complete flag */
-        // USART3_RxCheck();                       /* Check data */
+        // UART3_RxCheck();                       /* Check data */
         // LOG_D("DMA1_IT_HT3");
         rt_sem_release(uart3_rx_check_sem);
     }
@@ -1484,7 +1446,7 @@ void DMA1_Channel3_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_TC3) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC3); /* Clear transfer complete flag */
-        // USART3_RxCheck();                       /* Check data */
+        // UART3_RxCheck();                       /* Check data */
         // LOG_D("DMA1_IT_TC3");
         rt_sem_release(uart3_rx_check_sem);
     }
@@ -1507,9 +1469,9 @@ void DMA1_Channel4_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_TC4) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC4); /* Clear transfer complete flag */
-        lwrb_skip(&usart1_tx_rb, usart1_tx_dma_current_len);/* Skip buffer, it has been successfully sent out */
-        usart1_tx_dma_current_len = 0;           /* Reset data length */
-        USART1_StartTxDMATransfer();          /* Start new transfer */
+        lwrb_skip(&uart1_tx_rb, _uart1_tx_dma_current_len);/* Skip buffer, it has been successfully sent out */
+        _uart1_tx_dma_current_len = 0;           /* Reset data length */
+        _UART1_StartTxDMATransfer();          /* Start new transfer */
     }
 
     /* Implement other events when needed */
@@ -1530,7 +1492,7 @@ void DMA1_Channel5_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_HT5) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT5); /* Clear half-transfer complete flag */
-        // USART1_RxCheck();                       /* Check data */
+        // UART1_RxCheck();                       /* Check data */
         rt_sem_release(uart1_rx_check_sem);
         // LOG_D("DMA1_IT_HT5");
     }
@@ -1538,7 +1500,7 @@ void DMA1_Channel5_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_TC5) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC5); /* Clear transfer complete flag */
-        // USART1_RxCheck();                       /* Check data */
+        // UART1_RxCheck();                       /* Check data */
         rt_sem_release(uart1_rx_check_sem);
         // LOG_D("DMA1_IT_TC5");
     }
@@ -1560,7 +1522,7 @@ void DMA1_Channel6_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_HT6) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_HT6); /* Clear half-transfer complete flag */
-        // USART2_RxCheck();                       /* Check data */
+        // UART2_RxCheck();                       /* Check data */
         // LOG_D("DMA1_IT_HT6");
         rt_sem_release(uart2_rx_check_sem);
     }
@@ -1568,7 +1530,7 @@ void DMA1_Channel6_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_TC6) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC6); /* Clear transfer complete flag */
-        // USART2_RxCheck();                       /* Check data */
+        // UART2_RxCheck();                       /* Check data */
         // LOG_D("DMA1_IT_TC6");
         rt_sem_release(uart2_rx_check_sem);
     }
@@ -1591,9 +1553,9 @@ void DMA1_Channel7_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_TC7) != DISABLE)
     {
         DMA_ClearITPendingBit(DMA1_IT_TC7); /* Clear transfer complete flag */
-        lwrb_skip(&usart2_tx_rb, usart2_tx_dma_current_len);/* Skip buffer, it has been successfully sent out */
-        usart2_tx_dma_current_len = 0;           /* Reset data length */
-        USART2_StartTxDMATransfer();          /* Start new transfer */
+        lwrb_skip(&uart2_tx_rb, _uart2_tx_dma_current_len);/* Skip buffer, it has been successfully sent out */
+        _uart2_tx_dma_current_len = 0;           /* Reset data length */
+        _UART2_StartTxDMATransfer();          /* Start new transfer */
     }
 
     /* Implement other events when needed */
@@ -1611,19 +1573,19 @@ void USART1_IRQHandler(void)
 
     if(USART_GetITStatus(USART1, USART_IT_PE) != RESET) //校验错误
     {
-        // rt_sem_release(uart1_rev_parity_sem);
-        rt_event_send(&uart1_event, UART_EVENT_IT_RX_PE_FLAG);
+        rt_sem_release(uart1_rx_parity_err_sem);
+        // rt_event_send(&uart1_event, UART_EVENT_IT_RX_PE_FLAG);
     }
     if(USART_GetITStatus(USART1, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
     {
-        uint8_t temp = 0;
+        uint8_t temp;
         // 如果IDLEIE已经被置位，则会产生对应的中断。读状态寄存器再读数据寄存器的操作会清除此位
         temp = USART1->STATR;
         temp = USART1->DATAR;
         temp &= 0;
 
         rt_sem_release(uart1_rx_check_sem);
-        rt_sem_release(uart1_revok_sem);
+        rt_sem_release(uart1_rx_ok_sem);
         // rt_event_send(&uart1_event, UART_EVENT_IT_RX_IDLE_FLAG);
     }
     /* Implement other events when needed */
@@ -1643,28 +1605,26 @@ void USART2_IRQHandler(void)
     /* enter interrupt */
     rt_interrupt_enter();
 
-    uint8_t temp = 0;
-
     if(USART_GetITStatus(USART2, USART_IT_PE) != RESET)//校验错误
     {
         // uart2_rev_parity_flag = 1;
-        rt_sem_release(uart2_rev_parity_sem);
+        rt_sem_release(uart2_rx_parity_err_sem);
     }
     if(USART_GetITStatus(USART2, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
     {
+        uint8_t temp;
         // 如果IDLEIE已经被置位，则会产生对应的中断。读状态寄存器再读数据寄存器的操作会清除此位
   	    temp = USART2->STATR;
         temp = USART2->DATAR;
+        temp &= 0;
 
-            // USART2_RxCheck();
+        // UART2_RxCheck();
         // uart2_rev_flag = 1; //检测到空闲状态，置位接收完成位
         // LOG_D("USART2_IRQHandler");
         rt_sem_release(uart2_rx_check_sem);
-        rt_sem_release(uart2_revok_sem);
+        rt_sem_release(uart2_rx_ok_sem);
     }
     /* Implement other events when needed */
-
-    temp &= 0;
 
     /* leave interrupt */
     rt_interrupt_leave();
@@ -1677,26 +1637,24 @@ void USART3_IRQHandler(void)
     /* enter interrupt */
     rt_interrupt_enter();
 
-    uint8_t temp = 0;
-
     if(USART_GetITStatus(USART3, USART_IT_PE) != RESET)//校验错误
     {
         // uart3_rev_parity_flag = 1; //校验错误
-        rt_sem_release(uart3_rev_parity_sem);
+        rt_sem_release(uart3_rx_parity_err_sem);
     }
     if(USART_GetITStatus(USART3, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
     {
+        uint8_t temp;
         // 如果IDLEIE已经被置位，则会产生对应的中断。读状态寄存器再读数据寄存器的操作会清除此位
   	    temp = USART3->STATR;
         temp = USART3->DATAR;
+        temp &= 0;
 
-        // USART3_RxCheck();
+        // UART3_RxCheck();
         rt_sem_release(uart3_rx_check_sem);
-        rt_sem_release(uart3_revok_sem);
+        rt_sem_release(uart3_rx_ok_sem);
     }
     /* Implement other events when needed */
-
-    temp &= 0;
 
     /* leave interrupt */
     rt_interrupt_leave();
@@ -1705,9 +1663,9 @@ void USART3_IRQHandler(void)
 
 int rt_hw_usart_init(void)
 {
-    USART1_Init(115200, kCheck0Stop1);
-    // USART2_Init(115200, kCheck0Stop1);
-    USART3_Init(115200, kCheck0Stop1);
+    UART1_Init(115200, kCheck0Stop1);
+    // UART2_Init(115200, kCheck0Stop1);
+    // UART3_Init(115200, kCheck0Stop1);
 
     return 0;
 }
@@ -1719,38 +1677,35 @@ void rt_hw_console_output(const char *str)
     char a = '\r';
 
     size = rt_strlen(str);
-    rt_uint8_t buf[size * 2];
+    rt_uint8_t buf[size + size / 10 + 10];
 
     for (i = 0; i < size; i++, j++)
     {
         if (*(str + i) == '\n')
         {
-            // USART1_SendArray(&a, 1);
+            // UART1_Write(&a, 1);
             buf[j] = a;
             j++;
         }
-        // USART1_SendArray((str + i), 1);
+        // UART1_Write((str + i), 1);
         buf[j] = str[i];
     }
 
-    USART1_SendArray(buf, j);
+    UART1_Write(buf, j);
 }
 
-// extern rt_sem_t uart1_rx_check_sem;
-
 /* 移植 FinSH，实现命令行交互, 需要添加 FinSH 源码，然后再对接 rt_hw_console_getchar */
-/* 中断方式 */
 char rt_hw_console_getchar(void)
 {
     char ch = 0;
 
-    if (lwrb_get_full(&usart1_rx_rb) > 0)
+    if (lwrb_get_full(&uart1_rx_rb) > 0)
     {
-        lwrb_read(&usart1_rx_rb, &ch, 1);
+        lwrb_read(&uart1_rx_rb, &ch, 1);
     }
     else
     {
-        rt_sem_take(uart1_revok_sem, RT_WAITING_FOREVER);
+        rt_sem_take(uart1_rx_ok_sem, RT_WAITING_FOREVER);
     }
 
     return ch;

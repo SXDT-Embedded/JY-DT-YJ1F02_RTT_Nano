@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 14:27:22
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 15:06:09
+ * @LastEditTime : 2023-08-03 13:00:17
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\inc\bsp_wdg.h
  * @Description  :
  *
@@ -13,7 +13,7 @@
 
 #include "board.h"
 
-#define WDG_THREAD_STACK_SIZE    (512)
+#define WDG_THREAD_STACK_SIZE    (320)
 #define WDG_THREAD_PRIORITY      30
 #define WDG_THREAD_TIMESLICE     5
 

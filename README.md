@@ -10,9 +10,9 @@
 
 ### 中断
 
-这里对于CH32V203C8T6在 MRS 声明中断函数时由`__attribute__((interrupt()))`方式定义编译器添加软件出入栈的代码。
+这里对于CH32V203C8T6在 MRS 声明中断函数时由 `__attribute__((interrupt()))`方式定义编译器添加软件出入栈的代码。
 
-比如在`drv_usart.c`中，
+比如在 `drv_usart.c`中，
 
 ```c
 #ifdef BSP_USING_UART1
@@ -30,7 +30,11 @@ void USART1_IRQHandler(void)
 
 ### drv.usart.c
 
-这里我复制的是在RTT Studio基于CH32V307的BSP生成的4.1.1版本的代码中的驱动文件`drv.usart.c`的内容
+这里我复制的是在RTT Studio基于CH32V307的BSP生成的4.1.1版本的代码中的驱动文件 `drv.usart.c`的内容
 
 要注意的是CH32V203C8T6只有**4个串口**，只保留其中USART1/2/3，UART4，其余删掉
 
+
+## 线程优先级
+
+`drv_uart.c`中，串口使用DMA+空闲中断接收数据，在 `uart2_rx_dma_thread_entry` 线程中执行 `_UART2_RxCheck()`，其他想获取数据的线程优先级需**要低于**对应串口接收数据线程的优先级，以保证 `uart2_rx_dma_thread_entry`线程接收完所有数据后，其他线程才能通过获取 `uart2_rx_ok_sem`信号量来做数据处理。

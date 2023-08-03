@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 14:27:17
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 17:47:41
+ * @LastEditTime : 2023-08-03 12:58:48
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_wdg.c
  * @Description  :
  *
@@ -53,7 +53,7 @@ void IWDG_Init(uint16_t prescaler, uint16_t reload)
     LOG_D("IWDG_Feed_Init");
 }
 
-void IWDG_Feed(void)
+inline void IWDG_Feed(void)
 {
     // LOG_D("IWDG_Feed!");
     IWDG_ReloadCounter();	//Feed dog

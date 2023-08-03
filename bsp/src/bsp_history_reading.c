@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-03 10:18:08
+ * @LastEditTime : 2023-08-03 13:25:02
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
@@ -12,7 +12,7 @@
 #include "bsp_flash.h"
 #include "bsp_rtc.h"
 
-#include "drv_usart.h"
+#include "drv_uart.h"
 // #include "bsp_air780.h"
 
 #define LOG_TAG     "bsp_history_reading"          // 该模块对应的标签。不定义时，默认：NO_TAG
@@ -359,7 +359,7 @@ uint8_t HR_ProcessData(const TsFrameData *pHostFrameData, TeDataSources from)
         // HR_SendSlaveFrame(SlaveFrameData);
         if (from == kFromUart)
         {
-            USART2_SendArray(RawData.buf, RawData.len);
+            UART2_Write(RawData.buf, RawData.len);
         }
         else if (from == kFromIot)
         {
@@ -370,22 +370,31 @@ uint8_t HR_ProcessData(const TsFrameData *pHostFrameData, TeDataSources from)
     return flag;
 }
 
-uint8_t buf[USART2_RX_BUFFER_LENGTH];
-
 static void hr_thread_entry(void *param)
 {
+    uint8_t buf[UART2_RX_RB_LENGTH];
     while (1)
     {
-        rt_sem_take(uart2_revok_sem, RT_WAITING_FOREVER);
+        rt_sem_take(uart2_rx_ok_sem, RT_WAITING_FOREVER);
         LOG_D("uart2_revok_sem");
 
-        uint8_t buf_len = lwrb_get_full(&usart2_rx_rb);
-        lwrb_read(&usart2_rx_rb, buf, buf_len);
-        LOG_HEX("u2 buf", 16, &buf[0], buf_len);
+        // 检查校验错误
+        if (RT_EOK == rt_sem_trytake(uart2_rx_parity_err_sem))
+        {
+            LOG_D("uart2_rx_parity_err_sem");
+            lwrb_skip(&uart2_rx_rb, lwrb_get_full(&uart2_rx_rb));
+        }
+        else
+        {
+            uint8_t buf_len = lwrb_get_full(&uart2_rx_rb);
 
-    // TODO:这里有问题
+            lwrb_read(&uart2_rx_rb, buf, buf_len);
+            UART2_Write(buf, buf_len);
+            LOG_HEX("u2 buf", 16, buf, buf_len);
+        }
+
     #if 0
-        // USART2_SendArray(buf, buf_len);
+        // UART2_Write(buf, buf_len);
         if (buf_len >= HOST_FRAME_MIN_LEN)
         {
             TsFrameData *HostFrameData = HR_GetFrameData(buf, buf_len);
@@ -409,7 +418,7 @@ static void hr_thread_entry(void *param)
 
 int BSP_HR_Init(void)
 {
-    USART2_Init(HR_BAUDRATE, kCheckEven);
+    UART2_Init(HR_BAUDRATE, kCheckEven);
 
     rt_thread_init(&hr_thread,
                    "hr_thread",

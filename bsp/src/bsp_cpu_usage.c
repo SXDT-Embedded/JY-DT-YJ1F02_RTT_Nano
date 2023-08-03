@@ -13,7 +13,7 @@
 static rt_uint8_t cpu_usage_major = 0, cpu_usage_minor = 0;
 static rt_uint32_t total_count = 0;
 
-static void cpu_usage_idle_hook()
+static void _cpu_usage_idle_hook(void)
 {
     rt_tick_t tick;
     rt_uint32_t count;
@@ -74,7 +74,7 @@ void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor)
 int cpu_usage_init()
 {
     /* 设置空闲线程钩子函数 */
-    return rt_thread_idle_sethook(cpu_usage_idle_hook);
+    return rt_thread_idle_sethook(_cpu_usage_idle_hook);
 }
 #ifdef RT_USING_COMPONENTS_INIT
 INIT_APP_EXPORT(cpu_usage_init);

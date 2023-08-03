@@ -1156,6 +1156,7 @@ void rt_kputs(const char *str)
 #endif
 }
 
+#ifndef USING_RT_KPRINTF_THREADSAFE
 /**
  * This function will print a formatted string on system console
  *
@@ -1194,6 +1195,7 @@ void rt_kprintf(const char *fmt, ...)
 #endif
     va_end(args);
 }
+#endif  // !USING_RT_KPRINTF_THREADSAFE
 #endif
 
 #ifdef RT_USING_HEAP

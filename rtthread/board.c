@@ -12,7 +12,7 @@
 #include "board.h"
 
 #include <stdint.h>
-#include "drv_usart.h"
+#include "drv_uart.h"
 
 #include <rthw.h>
 #include <rtthread.h>
@@ -88,6 +88,8 @@ RT_WEAK void *rt_heap_end_get(void)
  */
 void rt_hw_board_init(void)
 {
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+
     /* System Tick Configuration */
     _SysTick_Config(SystemCoreClock / RT_TICK_PER_SECOND);
 

@@ -9,6 +9,10 @@
 //当系统加入 FinSH 组件源码后，需要在 rtconfig.h 中开启以下项
 #include "finsh_config.h"
 
+// 使用线程安全版本的rt_kprintf()
+// 4.0.4以下版本需要手动注释掉kservice.c内的rt_kprintf函数
+#define USING_RT_KPRINTF_THREADSAFE
+
 // #define RT_DEBUG
 // #define RT_DEBUG_COLOR
 // // 使用了 rtdbg log打印
@@ -61,6 +65,7 @@
 // <o>the stack size of main thread<1-4086>
 //  <i>Default: 512
 #define RT_MAIN_THREAD_STACK_SIZE     1280
+#define RT_MAIN_THREAD_PRIORITY       15
 
 //内核调试功能配置
 //定义 RT_DEBUG 宏则开启 debug 模式。若开启系统调试，则在实现打印之后可以打印系统 LOG 日志。请在代码开发与调试过程中打开该项，帮助调试定位问题，在代码发布时关闭该项。
