@@ -33,7 +33,7 @@
 #define FINSH_USING_MSH
 #define FINSH_USING_MSH_ONLY
 /* 最大输入参数数量为 10 个 */
-#define FINSH_ARG_MAX 3
+#define FINSH_ARG_MAX 5
 
 
 
