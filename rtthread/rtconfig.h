@@ -5,18 +5,12 @@
 
 #include <rtthread.h>
 
-// #define RT_USING_FINSH
 //当系统加入 FinSH 组件源码后，需要在 rtconfig.h 中开启以下项
 #include "finsh_config.h"
 
 // 使用线程安全版本的rt_kprintf()
 // 4.0.4以下版本需要手动注释掉kservice.c内的rt_kprintf函数
 #define USING_RT_KPRINTF_THREADSAFE
-
-// #define RT_DEBUG
-// #define RT_DEBUG_COLOR
-// // 使用了 rtdbg log打印
-// #define DBG_ENABLE
 
 /* Utilities */
 #define RT_USING_ULOG
@@ -36,24 +30,17 @@
 #define ULOG_USING_ISR_LOG
 /* end of Utilities */
 
-//基础配置
-// <<< Use Configuration Wizard in Context Menu >>>
-// <h>Basic Configuration
-// <o>Maximal level of thread priority <8-256>
-//  <i>Default: 32
+/* RT-Thread Kernel */
 //1、设置系统最大优先级，可设置范围 8 到 256，默认值 32，可修改。
 #define RT_THREAD_PRIORITY_MAX  32
 // <o>OS tick per second
 //  <i>Default: 1000   (1ms)
 //2、设置 RT-Thread 操作系统节拍，表示多少 tick 每秒，如默认值为 100 ，表示一个时钟节拍（os tick）长度为 10ms。常用值为 100 或 1000。时钟节拍率越快，系统的额外开销就越大。
 #define RT_TICK_PER_SECOND  1000
-// <o>Alignment size for CPU architecture data access
-//  <i>Default: 4
+
 //3、字节对齐时设定对齐的字节个数，默认 4，常使用 ALIGN (RT_ALIGN_SIZE) 进行字节对齐。
 #define RT_ALIGN_SIZE   4
-// <o>the max length of object name<2-16>
-//  <i>Default: 8
-//4、设置对象名称的最大长度，默认 8 个字符，一般无需修改。
+//4、设置对象名称的最大长度<2-16>，默认 8 个字符，一般无需修改。
 #define RT_NAME_MAX    16
 // <c1>Using RT-Thread components initialization
 //  <i>Using RT-Thread components initialization
@@ -67,18 +54,17 @@
 #define RT_MAIN_THREAD_STACK_SIZE     1280
 #define RT_MAIN_THREAD_PRIORITY       15
 
+// 钩子函数配置
+// 设置是否使用钩子函数，默认关闭。
+#define RT_USING_HOOK                         // 是否 开启系统钩子功能
+#define RT_USING_IDLE_HOOK                    // 是否 开启空闲线程钩子功能
+#define IDLE_THREAD_STACK_SIZE     512
+
 //内核调试功能配置
 //定义 RT_DEBUG 宏则开启 debug 模式。若开启系统调试，则在实现打印之后可以打印系统 LOG 日志。请在代码开发与调试过程中打开该项，帮助调试定位问题，在代码发布时关闭该项。
 // #define RT_DEBUG                    // 关闭 debug
 // #define RT_DEBUG_INIT 1            // 启用组件初始化调试配置，设置为 1 则会打印自动初始化的函数名称
 #define RT_USING_OVERFLOW_CHECK     // 关闭栈溢出检查
-
-
-//钩子函数配置
-//设置是否使用钩子函数，默认关闭。
-#define RT_USING_HOOK                         // 是否 开启系统钩子功能
-#define RT_USING_IDLE_HOOK                    // 是否 开启空闲线程钩子功能
-#define IDLE_THREAD_STACK_SIZE     512
 
 //软件定时器配置
 //设置是否启用软件定时器，以及相关参数的配置，默认关闭。
@@ -120,6 +106,7 @@
 #define BSP_USING_UART1
 
 /* end of On-chip Peripheral Drivers */
+
 
 //#define RT_USING_POSIX
 

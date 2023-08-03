@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 11:12:26
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 11:12:26
+ * @LastEditTime : 2023-08-03 14:13:37
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\inc\bsp_adc.h
  * @Description  :
  *
@@ -61,7 +61,7 @@
 
 typedef enum
 {
-    kCoilAdc = 0,
+    kCoilAdc = 0U,
     kMqAdc,
     kVinAdc
 } TeAdcIndex;
@@ -73,9 +73,6 @@ int BSP_ADC_Init(void);
 
 float Get_ADC_Average(TeAdcIndex index);
 float Get_ADC_Voltage(TeAdcIndex index);
-uint16_t Get_ADC_VoltageInt1000x(TeAdcIndex index);
-
-
 
 
 #endif // !__BSP_ADC_H__

@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-01-30 12:50:12
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 11:31:22
+ * @LastEditTime : 2023-08-03 14:12:03
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_adc.c
  * @Description  :
  *
@@ -25,7 +25,7 @@ static int16_t adc_calibrattion = 0;
  * @param {int16_t} val     Sampling value
  * @return {*}  val+Calibrattion_Val - Conversion Value.
  */
-static uint16_t Get_ConversionVal(int16_t val)
+static uint16_t _Get_ConversionVal(int16_t val)
 {
     if((val + adc_calibrattion) < 0)
         return 0;
@@ -38,7 +38,7 @@ static uint16_t Get_ConversionVal(int16_t val)
  * @description: ADC管脚GPIO初始化GPIO_Mode_AIN
  * @return {*}
  */
-static void USED_ADC_GPIO_Init(void)
+static void _USED_ADC_GPIO_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -51,7 +51,7 @@ static void USED_ADC_GPIO_Init(void)
     GPIO_Init(USED_ADC_GPIO_PORT, &GPIO_InitStructure);
 }
 
-static void USED_ADC_DMA_Init(void)
+static void _USED_ADC_DMA_Init(void)
 {
     DMA_InitTypeDef DMA_InitStructure = {0};
 
@@ -77,8 +77,8 @@ int BSP_ADC_Init(void)
     ADC_InitTypeDef ADC_InitStructure = {0};
     // NVIC_InitTypeDef NVIC_InitStructure = {0};
 
-    USED_ADC_GPIO_Init();
-    USED_ADC_DMA_Init();
+    _USED_ADC_GPIO_Init();
+    _USED_ADC_DMA_Init();
 
     // 开启ADC时钟
     USED_ADC_CLK_ENABLE();
@@ -145,7 +145,7 @@ float Get_ADC_Average(TeAdcIndex index)
 
     for (uint8_t i = index; i < ADC_BUFFER_SIZE; i += NUM_OF_CHANNEL)
     {
-        sum += Get_ConversionVal(adc_buffer[i]);
+        sum += _Get_ConversionVal(adc_buffer[i]);
     }
     average = sum / ADC_TIMES;
 

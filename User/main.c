@@ -45,7 +45,7 @@ int main(void)
 			}
 		}
 
-	    rt_thread_mdelay(100);
-		LOG_D("test USING_RT_KPRINTF_THREADSAFE");
+	    rt_thread_mdelay(1);
+		// LOG_D("test USING_RT_KPRINTF_THREADSAFE");
     }
 }
