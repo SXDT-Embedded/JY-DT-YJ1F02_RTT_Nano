@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-04-04 14:45:50
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-03 16:24:47
+ * @LastEditTime : 2023-08-03 16:40:43
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_led.c
  * @Description  :
  *
@@ -14,6 +14,12 @@
 #define LOG_TAG     "bsp_led"          // 该模块对应的标签。不定义时，默认：NO_TAG
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
+
+#include "agile_led.h"
+
+static agile_led_t *led1 = RT_NULL;
+static agile_led_t *led2 = RT_NULL;
+static agile_led_t *led3 = RT_NULL;
 
 int BSP_LED_Init(void)
 {
@@ -33,6 +39,10 @@ int BSP_LED_Init(void)
     NETLED_G_OFF;
     NETLED_Y_OFF;
 
+    led1 = agile_led_create(NETLED_R_PIN, PIN_HIGH, "100,200", -1);
+    led2 = agile_led_create(NETLED_G_PIN, PIN_HIGH, "200,800", 10);
+    led3 = agile_led_create(NETLED_Y_PIN, PIN_HIGH, "100,200", 3);
+
     LOG_I("BSP_LED_Init");
 
     return 0;
@@ -43,6 +53,13 @@ INIT_APP_EXPORT(BSP_LED_Init);
 
 static int led_test(void)
 {
+    agile_led_start(led1);
+    agile_led_start(led2);
+    agile_led_start(led3);
+
+    rt_thread_mdelay(5000);
+
+    agile_led_stop(led1);
 
     return 0;
 }
