@@ -66,6 +66,10 @@ static int littled_sample(void)
     LED_OFF(led3);
     rt_thread_mdelay(1000);
 
+    LED_BLINK(led1);
+    LED_BLINK_FAST(led2);
+    LED_BLINK_SLOW(led3);
+
     // led_unregister(led_test);
 
     return 0;
