@@ -107,6 +107,8 @@
 
 /* end of On-chip Peripheral Drivers */
 
+#define PKG_AGILE_LED_DEBUG
+#define PKG_AGILE_LED_USING_THREAD_AUTO_INIT
 
 //#define RT_USING_POSIX
 

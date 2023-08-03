@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-04-04 14:45:50
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-03 16:15:23
+ * @LastEditTime : 2023-08-03 16:24:47
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_led.c
  * @Description  :
  *
@@ -14,12 +14,6 @@
 #define LOG_TAG     "bsp_led"          // 该模块对应的标签。不定义时，默认：NO_TAG
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
-
-#include "easyblink.h"
-
-ebled_t led1 = RT_NULL;
-ebled_t led2 = RT_NULL;
-ebled_t led3 = RT_NULL;
 
 int BSP_LED_Init(void)
 {
@@ -41,10 +35,6 @@ int BSP_LED_Init(void)
 
     LOG_I("BSP_LED_Init");
 
-    led1 = easyblink_init_led(NETLED_R_PIN, PIN_HIGH);
-    led2 = easyblink_init_led(NETLED_G_PIN, PIN_HIGH);
-    led3 = easyblink_init_led(NETLED_Y_PIN, PIN_HIGH);
-
     return 0;
 }
 #ifdef RT_USING_COMPONENTS_INIT
@@ -53,14 +43,6 @@ INIT_APP_EXPORT(BSP_LED_Init);
 
 static int led_test(void)
 {
-    easyblink_stop(led1);
-    easyblink_stop(led2);
-    easyblink_stop(led3);
-
-    // rt_thread_mdelay(5000);
-    easyblink(led1, 10, 1000, 200);
-    easyblink(led2, 10, 1000, 200);
-    easyblink(led3, 10, 1000, 200);
 
     return 0;
 }
