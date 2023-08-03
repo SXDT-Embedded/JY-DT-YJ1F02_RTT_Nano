@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-04-04 14:45:50
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-03 15:55:06
+ * @LastEditTime : 2023-08-03 16:15:23
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_led.c
  * @Description  :
  *
@@ -51,31 +51,19 @@ int BSP_LED_Init(void)
 INIT_APP_EXPORT(BSP_LED_Init);
 #endif
 
-static int ebled_test(void)
+static int led_test(void)
 {
-    /* led1 闪3次，周期1000ms，亮500ms */
-    easyblink(led1, 3, 500, 1000);
-    /* led1 上次的闪完后，再接着闪2次，周期2000ms，亮1500ms */
-    easyblink(led1, 2, 1500, 2000);
-    /* led2 一直闪，周期1000ms，亮5ms */
-    easyblink(led2, -1, 5, 1000);
-
-    rt_thread_mdelay(8000);
-
-    /* 打断led2闪烁，开始闪5次，周期500ms，亮300ms，闪完后恢复led2前次的序列 */
-    easyblink(led2, 5, 300, 500);
-
-    easyblink(led1, -1, 10, 5000);
-
-    rt_thread_mdelay(8000);
-
-    /* 中途打断，停止闪烁 */
+    easyblink_stop(led1);
     easyblink_stop(led2);
+    easyblink_stop(led3);
 
-    rt_thread_mdelay(5000);
+    // rt_thread_mdelay(5000);
+    easyblink(led1, 10, 1000, 200);
+    easyblink(led2, 10, 1000, 200);
+    easyblink(led3, 10, 1000, 200);
 
     return 0;
 }
 #ifdef FINSH_USING_MSH
-// MSH_CMD_EXPORT(ebled_test, ebled_test);
+MSH_CMD_EXPORT(led_test, led_test);
 #endif // !FINSH_USING_MSH
