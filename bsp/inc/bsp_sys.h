@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 15:47:14
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 15:52:22
+ * @LastEditTime : 2023-08-03 17:19:59
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\inc\bsp_sys.h
  * @Description  :
  *
@@ -12,6 +12,8 @@
 #define __BSP_SYS_H__
 
 #include "board.h"
+#include <rtthread.h>
+#include <rthw.h>
 
 // 预热3min
 //#define SYS_PREHEAT_TIME_MS      ((uint32_t)(1000 * 60 * 3))
@@ -20,6 +22,23 @@
 #define SYS_MUTE_TIME_MS            ((uint32_t)(1000 * 10))
 
 #define MAX_EXPIRATION_DAYS         ((uint16_t)(365 * 5 + 30 * 3))
+
+
+// #define MQ_THREAD_STACK_SIZE    (512)
+// #define MQ_THREAD_PRIORITY      9
+// #define MQ_THREAD_TIMESLICE     5
+
+/* sys 事件控制块 */
+extern rt_event_t sys_event;
+
+#define EVENT_NORMAL_FLAG            (1 << 0)
+#define EVENT_ALARM_FLAG             (1 << 1)
+#define EVENT_END_OF_LIFE_FLAG       (1 << 2)
+#define EVENT_OPEN_CIRCUIT_FLAG      (1 << 3)
+#define EVENT_SHORT_CIRCUIT_FLAG     (1 << 4)
+#define EVENT_CALIBRATION_FLAG       (1 << 5)
+#define EVENT_FAULT_FLAG             (1 << 6)
+
 
 typedef enum
 {
