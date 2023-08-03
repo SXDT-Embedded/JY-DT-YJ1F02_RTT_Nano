@@ -1608,6 +1608,8 @@ void USART2_IRQHandler(void)
     if(USART_GetITStatus(USART2, USART_IT_PE) != RESET)//校验错误
     {
         // uart2_rev_parity_flag = 1;
+        // 这里有校验错误的话，信号量uart2_rx_parity_err_sem会加好几次
+        // LOG_D("uart2_rx_parity_err_sem");
         rt_sem_release(uart2_rx_parity_err_sem);
     }
     if(USART_GetITStatus(USART2, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
