@@ -350,7 +350,7 @@ int rt_hw_usart_init(void)
     return result;
 }
 #else   /* RT_USING_SERIAL */
-#include <string.h>
+// #include <string.h>
 #include "lwutil.h"
 
 #if 0
@@ -494,6 +494,10 @@ uint8_t usart3_tx_rb_data[USART3_TX_RB_LENGTH];
 volatile size_t usart1_tx_dma_current_len;
 volatile size_t usart2_tx_dma_current_len;
 volatile size_t usart3_tx_dma_current_len;
+
+struct rt_event uart1_event;
+struct rt_event uart2_event;
+struct rt_event uart3_event;
 
 rt_sem_t uart1_rx_check_sem = RT_NULL;
 rt_sem_t uart2_rx_check_sem = RT_NULL;
@@ -1461,10 +1465,7 @@ void DMA1_Channel2_IRQHandler(void)
     FREE_INT_SP();
 }
 
-/**
- * @description: DMA1 channel3 interrupt handler for UART3 RX
- * @return {*}
- */
+// UART3 RX
 void DMA1_Channel3_IRQHandler(void)
 {
     GET_INT_SP();
@@ -1495,10 +1496,7 @@ void DMA1_Channel3_IRQHandler(void)
     FREE_INT_SP();
 }
 
-/**
- * @description: DMA1 channel4 interrupt handler for UART1 TX
- * @return {*}
- */
+// UART1 TX
 void DMA1_Channel4_IRQHandler(void)
 {
     GET_INT_SP();
@@ -1521,7 +1519,7 @@ void DMA1_Channel4_IRQHandler(void)
     FREE_INT_SP();
 }
 
-//  DMA1 channel5 interrupt handler for UART1 RX
+//  UART1 RX
 void DMA1_Channel5_IRQHandler(void)
 {
     GET_INT_SP();
@@ -1551,10 +1549,7 @@ void DMA1_Channel5_IRQHandler(void)
     FREE_INT_SP();
 }
 
-/**
- * @description: DMA1 channel6 interrupt handler for UART2 RX
- * @return {*}
- */
+// UART2 RX
 void DMA1_Channel6_IRQHandler(void)
 {
     GET_INT_SP();
@@ -1585,10 +1580,7 @@ void DMA1_Channel6_IRQHandler(void)
     FREE_INT_SP();
 }
 
-/**
- * @description: DMA1 channel7 interrupt handler for UART2 TX
- * @return {*}
- */
+// UART2 TX
 void DMA1_Channel7_IRQHandler(void)
 {
     GET_INT_SP();
@@ -1617,26 +1609,24 @@ void USART1_IRQHandler(void)
     /* enter interrupt */
     rt_interrupt_enter();
 
-    uint8_t temp = 0;
-
     if(USART_GetITStatus(USART1, USART_IT_PE) != RESET) //校验错误
     {
-        // uart1_rev_parity_flag = 1;
-        rt_sem_release(uart1_rev_parity_sem);
+        // rt_sem_release(uart1_rev_parity_sem);
+        rt_event_send(&uart1_event, UART_EVENT_IT_RX_PE_FLAG);
     }
     if(USART_GetITStatus(USART1, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
     {
+        uint8_t temp = 0;
         // 如果IDLEIE已经被置位，则会产生对应的中断。读状态寄存器再读数据寄存器的操作会清除此位
-  	    temp = USART1->STATR;
+        temp = USART1->STATR;
         temp = USART1->DATAR;
+        temp &= 0;
 
-        // USART1_RxCheck();
         rt_sem_release(uart1_rx_check_sem);
         rt_sem_release(uart1_revok_sem);
+        // rt_event_send(&uart1_event, UART_EVENT_IT_RX_IDLE_FLAG);
     }
     /* Implement other events when needed */
-
-    temp &= 0;
 
     /* leave interrupt */
     rt_interrupt_leave();

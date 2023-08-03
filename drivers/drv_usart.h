@@ -37,7 +37,7 @@ struct ch32_uart
 
 typedef enum
 {
-    kCheck0Stop1 = 0,
+    kCheck0Stop1 = 0U,
     kCheck0Stop2,
     kCheckOdd,
     kCheckEven
@@ -96,6 +96,24 @@ extern lwrb_t usart2_rx_rb;
 extern lwrb_t usart3_rx_rb;
 
 extern rt_sem_t uart2_revok_sem;
+
+
+#define UART_EVENT_DMA_RX_GL_FLAG       (1 << 0)
+#define UART_EVENT_DMA_RX_TC_FLAG       (1 << 1)
+#define UART_EVENT_DMA_RX_HT_FLAG       (1 << 2)
+#define UART_EVENT_DMA_RX_TE_FLAG       (1 << 3)
+
+#define UART_EVENT_DMA_TX_GL_FLAG       (1 << 4)
+#define UART_EVENT_DMA_TX_TC_FLAG       (1 << 5)
+#define UART_EVENT_DMA_TX_HT_FLAG       (1 << 6)
+#define UART_EVENT_DMA_TX_TE_FLAG       (1 << 7)
+
+#define UART_EVENT_IT_RX_IDLE_FLAG      (1 << 8)
+#define UART_EVENT_IT_RX_PE_FLAG        (1 << 9)
+
+// 一帧数据接受完成
+#define UART_EVENT_RX_OK_FLAG           (1 << 10)
+#define UART_EVENT_TX_OK_FLAG           (1 << 11)
 
 // 阻塞式发送的
 void USART_SendByte(USART_TypeDef *pUSARTx, const uint16_t data);

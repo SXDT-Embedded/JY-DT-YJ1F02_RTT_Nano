@@ -18,7 +18,6 @@ encoding//bsp/src/bsp_led.c=GBK
 encoding//bsp/src/bsp_mq.c=UTF-8
 encoding//bsp/src/bsp_rtc.c=UTF-8
 encoding//bsp/src/bsp_sys.c=UTF-8
-encoding//bsp/src/bsp_uart.c=GBK
 encoding//drivers/drv_gpio.c=UTF-8
 encoding//drivers/drv_usart.c=UTF-8
 encoding//drivers/drv_usart.h=GBK

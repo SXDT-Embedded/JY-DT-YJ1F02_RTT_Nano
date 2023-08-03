@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 18:15:16
+ * @LastEditTime : 2023-08-03 10:18:08
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
@@ -371,6 +371,7 @@ uint8_t HR_ProcessData(const TsFrameData *pHostFrameData, TeDataSources from)
 }
 
 uint8_t buf[USART2_RX_BUFFER_LENGTH];
+
 static void hr_thread_entry(void *param)
 {
     while (1)
@@ -380,7 +381,10 @@ static void hr_thread_entry(void *param)
 
         uint8_t buf_len = lwrb_get_full(&usart2_rx_rb);
         lwrb_read(&usart2_rx_rb, buf, buf_len);
+        LOG_HEX("u2 buf", 16, &buf[0], buf_len);
 
+    // TODO:这里有问题
+    #if 0
         // USART2_SendArray(buf, buf_len);
         if (buf_len >= HOST_FRAME_MIN_LEN)
         {
@@ -399,6 +403,7 @@ static void hr_thread_entry(void *param)
 
             // lwrb_skip(&usart2_rx_rb, buf_len);/* Skip buffer, it has been successfully parse*/
         }
+    #endif
     }
 }
 
