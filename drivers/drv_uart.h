@@ -50,12 +50,12 @@ struct ch32_uart
 #define UART3_DMA_RX_THREAD_PRIORITY      (8)
 #define UART3_DMA_RX_THREAD_TIMESLICE     (5)
 
-extern rt_event_t uart2_event;
+// extern rt_event_t uart2_event;
 
-// 收到一帧完成数据
-#define UART2_EVENT_RX_OK_FLAG      (1 << 0)
-// 接收数据中有校验错误发生
-#define UART2_EVENT_RX_PE_FLAG      (1 << 1)
+// // 收到一帧完成数据
+// #define UART2_EVENT_RX_OK_FLAG      (1 << 0)
+// // 接收数据中有校验错误发生
+// #define UART2_EVENT_RX_PE_FLAG      (1 << 1)
 
 // UART1 - TX
 #define UART1_TX_GPIO_PIN              GPIO_Pin_9
@@ -113,8 +113,8 @@ extern lwrb_t uart2_rx_rb;
 extern lwrb_t uart3_rx_rb;
 
 // uart2 历史数据读取 4800bps偶校验
-// extern rt_sem_t uart2_rx_ok_sem;
-// extern rt_sem_t uart2_rx_parity_err_sem;
+extern rt_sem_t uart2_rx_ok_sem;
+extern rt_sem_t uart2_rx_parity_err_sem;
 
 extern rt_sem_t uart3_rx_ok_sem;
 

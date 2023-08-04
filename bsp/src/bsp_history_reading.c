@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-03 17:33:57
+ * @LastEditTime : 2023-08-04 10:10:19
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
@@ -372,18 +372,13 @@ uint8_t HR_ProcessData(const TsFrameData *pHostFrameData, TeDataSources from)
 
 static void hr_thread_entry(void *param)
 {
-    rt_uint32_t uart2_event_recved;
     uint8_t buf[UART2_RX_RB_LENGTH];
     while (1)
     {
         rt_sem_take(uart2_rx_ok_sem, RT_WAITING_FOREVER);
-        LOG_D("uart2_revok_sem");
 
-        if (RT_EOK == rt_event_recv(uart2_event
-						, UART2_EVENT_RX_OK_FLAG
-						, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR
-						, RT_WAITING_FOREVER
-						, &uart2_event_recved))
+        // 检查校验错误
+        if (RT_EOK == rt_sem_trytake(uart2_rx_parity_err_sem))
         {
             // 这里有校验错误的话，信号量uart2_rx_parity_err_sem会加好几次
             // 感觉用事件好点，但是比sem多占用52B
@@ -399,28 +394,27 @@ static void hr_thread_entry(void *param)
             uint8_t buf_len = lwrb_get_full(&uart2_rx_rb);
             lwrb_read(&uart2_rx_rb, buf, buf_len);
             // UART2_Write(buf, buf_len);
-            LOG_HEX("u2 buf", 16, buf, buf_len);
+            LOG_HEX("u2 rx buf", 16, buf, buf_len);
 
-            #if 1
-                if (buf_len >= HOST_FRAME_MIN_LEN)
+        #if 1
+            if (buf_len >= HOST_FRAME_MIN_LEN)
+            {
+                TsFrameData *HostFrameData = HR_GetFrameData(buf, buf_len);
+
+                if(HostFrameData != RT_NULL)
                 {
-                    TsFrameData *HostFrameData = HR_GetFrameData(buf, buf_len);
+                    // LOG_D("c1: %d, c2: %d, len: %d", HostFrameData->c1, \
+                    //     HostFrameData->c2, HostFrameData->len);
+                    // logHexDumpAll(HostFrameData->data, HostFrameData->len);
 
-                    if(HostFrameData != RT_NULL)
-                    {
-                        // LOG_D("c1: %d, c2: %d, len: %d", HostFrameData->c1, \
-                        //     HostFrameData->c2, HostFrameData->len);
-                        // logHexDumpAll(HostFrameData->data, HostFrameData->len);
-
-                        HR_ProcessData(HostFrameData, kFromUart);
-                    }
-                    rt_free(HostFrameData);
-                    HostFrameData = RT_NULL;
-
-                    // lwrb_skip(&usart2_rx_rb, buf_len);/* Skip buffer, it has been successfully parse*/
+                    HR_ProcessData(HostFrameData, kFromUart);
                 }
-            #endif
+                rt_free(HostFrameData);
+                HostFrameData = RT_NULL;
+
+                // lwrb_skip(&usart2_rx_rb, buf_len);/* Skip buffer, it has been successfully parse*/
             }
+        #endif
         }
     }
 }
