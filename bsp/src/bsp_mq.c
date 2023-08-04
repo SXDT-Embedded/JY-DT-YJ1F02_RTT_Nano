@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-01-30 15:40:07
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 08:52:10
+ * @LastEditTime : 2023-08-04 16:23:30
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_mq.c
  * @Description  :
  *
@@ -146,8 +146,7 @@ int BSP_MQ_Init(void)
     result = rt_event_init(&mq_event, "mq_event", RT_IPC_FLAG_PRIO);
     if (result != RT_EOK)
     {
-        LOG_D("init mq_event failed");
-        return -1;
+        LOG_E("init mq_event failed");
     }
 
     rt_thread_init(&mq_detection_thread,
@@ -167,7 +166,7 @@ int BSP_MQ_Init(void)
 INIT_DEVICE_EXPORT(BSP_MQ_Init);
 #endif
 
-static void TEST_MQ_Send()
+static void TEST_MQ_Send(void)
 {
     rt_event_send(&mq_event, MQ_EVENT_ALARM_FLAG);
     rt_thread_mdelay(10);

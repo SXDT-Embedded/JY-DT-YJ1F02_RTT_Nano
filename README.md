@@ -34,6 +34,14 @@ void USART1_IRQHandler(void)
 
 要注意的是CH32V203C8T6只有**4个串口**，只保留其中USART1/2/3，UART4，其余删掉
 
+## 高精度延时
+
+> 参考：
+>
+> [RTT文档-高精度延时](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/programming-manual/timer/timer?id=高精度延时)
+
+
+
 
 ## 线程优先级
 
