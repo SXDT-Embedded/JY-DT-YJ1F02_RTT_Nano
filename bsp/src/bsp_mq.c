@@ -116,7 +116,7 @@ int BSP_MQ_Init(void)
     //     Mq.expiration_seconds = DateTime2Seconds(LimitTime.Struct.year, \
     //         LimitTime.Struct.month, LimitTime.Struct.day, LimitTime.Struct.hour, \
     //         LimitTime.Struct.minute, LimitTime.Struct.second);
-    //     logDebug("mq_expiration_time:%04d-%02d-%02d,%02d:%02d", \
+    //     LOG_D("mq_expiration_time:%04d-%02d-%02d,%02d:%02d", \
     //                 LimitTime.Struct.year, LimitTime.Struct.month, LimitTime.Struct.day,
     //                 LimitTime.Struct.hour, LimitTime.Struct.minute, LimitTime.Struct.second);
     // }

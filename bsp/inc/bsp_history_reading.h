@@ -96,7 +96,6 @@ typedef struct __attribute__((packed))
 
 int BSP_HR_Init(void);
 
-void HR_Loop(void);
 TsFrameData* HR_GetFrameData(const uint8_t *p_src, const uint8_t src_len);
 // FlagStatus HR_ProcessData(const TsFrameData *pHostFrameData);
 // uint8_t HR_ProcessData(const TsFrameData *pHostFrameData);

@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 16:53:36
+ * @LastEditTime : 2023-08-04 17:04:06
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
@@ -94,7 +94,6 @@ TsFrameData* HR_GetFrameData(const uint8_t *p_src, const uint8_t src_len)
 
     return get_buffer;
 }
-
 
 uint8_t HR_GenerateRawFrame(TsRawFrameData* pRawData
     , uint8_t c1, TeFrameC2 c2, const uint8_t* p_src, uint8_t src_len)
@@ -395,8 +394,8 @@ static void hr_thread_entry(void *param)
                 if(HostFrameData != RT_NULL)
                 {
                     LOG_D("HostFrameData != RT_NULL");
-                    LOG_D("HostFrameData->data = %p, len = %d", HostFrameData->data, HostFrameData->len);
-                    LOG_HEX("HostFrameData", 16, HostFrameData->data, HostFrameData->len);
+                    LOG_D("HostFrameData->data @ %p, len = %d", HostFrameData->data, HostFrameData->len);
+                    LOG_HEX("HostFrameData", 16, &HostFrameData->data[0], 10);
                     LOG_HEX("HostFrameData All", 16, (uint8_t *)HostFrameData, 20);
 
                     HR_ProcessData(HostFrameData);
@@ -423,6 +422,8 @@ int BSP_HR_Init(void)
     rt_thread_startup(&hr_thread);
 
     LOG_I("BSP_HR_Init");
+
+    return 0;
 }
 #ifdef RT_USING_COMPONENTS_INIT
 INIT_APP_EXPORT(BSP_HR_Init);
