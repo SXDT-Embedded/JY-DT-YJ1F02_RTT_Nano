@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 16:42:17
+ * @LastEditTime : 2023-08-04 16:53:36
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
@@ -122,6 +122,7 @@ uint8_t HR_GenerateRawFrame(TsRawFrameData* pRawData
     return flag;
 }
 
+// TODO:应答数据指针加在入参，返回生成应答数据的状态
 uint8_t HR_ProcessData(const TsFrameData *pHostFrameData)
 {
     TuFlashProductTimeLimitFrame ReadLimitTime;
