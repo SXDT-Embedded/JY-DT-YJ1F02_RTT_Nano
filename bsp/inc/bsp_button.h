@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 17:15:14
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 15:42:38
+ * @LastEditTime : 2023-08-04 16:47:04
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\inc\bsp_button.h
  * @Description  :
  *
@@ -33,6 +33,6 @@ typedef enum
   kButtonMuteCheckId = 0U,
 }TeButtonId;
 
-int BSP_BUTTON_Init();
+int BSP_BUTTON_Init(void);
 
 #endif // !__BSP_BUTTON_H__

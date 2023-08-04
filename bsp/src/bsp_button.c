@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 17:15:25
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 15:48:59
+ * @LastEditTime : 2023-08-04 16:50:20
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_button.c
  * @Description  :
  *
@@ -29,16 +29,15 @@ static struct rt_thread button_thread;
 static rt_timer_t button_timer;
 #endif // !BUTTON_USE_THREAD
 
-
 //先申请一个按键结构
-struct Button button_mute_check;
+static struct Button button_mute_check;
 
 /**
  * @description: 按键读取GPIO电平
  * @param {TeButtonId} button_id   自己定义的按键id
  * @return {uint8_t}            0-引脚低电平，(1)-引脚高电平
  */
-static uint8_t Button_ReadPin(uint8_t button_id)
+static uint8_t _Button_ReadPin(uint8_t button_id)
 {
     switch (button_id)
     {
@@ -52,7 +51,7 @@ static uint8_t Button_ReadPin(uint8_t button_id)
     }
 }
 
-static void ButtonMuteCheck_SingleClickCb(void *btn)
+static void _ButtonMuteCheck_SingleClickCb(void *btn)
 {
     LOG_D("ButtonMuteCheck SingleClick!");
 
@@ -63,7 +62,7 @@ static void ButtonMuteCheck_SingleClickCb(void *btn)
     // }
 }
 
-static void ButtonMuteCheck_DoubleClickCb(void *btn)
+static void _ButtonMuteCheck_DoubleClickCb(void *btn)
 {
     LOG_D("ButtonMuteCheck DoubleClick");
     // Coil_Close();
@@ -74,7 +73,7 @@ static void ButtonMuteCheck_DoubleClickCb(void *btn)
  * @param {void*} btn
  * @return {void}
  */
-static void ButtonMuteCheck_LongStartCb(void *btn)
+static void _ButtonMuteCheck_LongStartCb(void *btn)
 {
     LOG_D("ButtonMuteCheck LongStart");
 
@@ -88,7 +87,7 @@ static void ButtonMuteCheck_LongStartCb(void *btn)
     // }
 }
 
-static void button_process(void *param)
+static void _BUTTON_Process(void *param)
 {
 #ifdef BUTTON_USE_THREAD
     while (1)
@@ -110,12 +109,12 @@ int BSP_BUTTON_Init(void)
 {
     rt_pin_mode(BUTTON_MUTE_CHECK_PIN, PIN_MODE_INPUT_PULLUP);
 
-    button_init(&button_mute_check, Button_ReadPin, 0, kButtonMuteCheckId);
+    button_init(&button_mute_check, _Button_ReadPin, 0, kButtonMuteCheckId);
 
     // 注册button_mute的事件回调函数
-    button_attach(&button_mute_check, SINGLE_CLICK, ButtonMuteCheck_SingleClickCb);
-    button_attach(&button_mute_check, DOUBLE_CLICK, ButtonMuteCheck_DoubleClickCb);
-    button_attach(&button_mute_check, LONG_PRESS_START, ButtonMuteCheck_LongStartCb);
+    button_attach(&button_mute_check, SINGLE_CLICK, _ButtonMuteCheck_SingleClickCb);
+    button_attach(&button_mute_check, DOUBLE_CLICK, _ButtonMuteCheck_DoubleClickCb);
+    button_attach(&button_mute_check, LONG_PRESS_START, _ButtonMuteCheck_LongStartCb);
 
     // 启动按键
     button_start(&button_mute_check);
@@ -123,14 +122,14 @@ int BSP_BUTTON_Init(void)
 #ifdef BUTTON_USE_THREAD
     rt_thread_init(&button_thread,
                    "button_thread",
-                   button_process,
+                   _BUTTON_Process,
                    RT_NULL,
                    &button_thread_stack[0],
                    sizeof(button_thread_stack),
                    BUTTON_THREAD_PRIORITY, BUTTON_THREAD_TIMESLICE);
     rt_thread_startup(&button_thread);
 #else
-    button_timer = rt_timer_create("button_timer", button_process,
+    button_timer = rt_timer_create("button_timer", _BUTTON_Process,
                              RT_NULL, 5,
                              RT_TIMER_FLAG_PERIODIC);
     if (button_timer != RT_NULL)
