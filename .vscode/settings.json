@@ -32,7 +32,8 @@
         "string.h": "c",
         "lwrb.h": "c",
         "bsp_wdg.h": "c",
-        "bsp_mq.h": "c"
+        "bsp_mq.h": "c",
+        "drv_gpio.h": "c"
     },
     "commentTranslate.hover.enabled": false,
     "commentTranslate.targetLanguage": "zh-CN"

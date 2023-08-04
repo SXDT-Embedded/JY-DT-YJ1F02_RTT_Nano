@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 17:15:25
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 17:43:44
+ * @LastEditTime : 2023-08-04 15:48:59
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_button.c
  * @Description  :
  *
@@ -20,9 +20,15 @@
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
+#ifdef BUTTON_USE_THREAD
 ALIGN(RT_ALIGN_SIZE)
 static char button_thread_stack[BUTTON_THREAD_STACK_SIZE];
 static struct rt_thread button_thread;
+#else
+/* 定时器的控制块 */
+static rt_timer_t button_timer;
+#endif // !BUTTON_USE_THREAD
+
 
 //先申请一个按键结构
 struct Button button_mute_check;
@@ -82,14 +88,18 @@ static void ButtonMuteCheck_LongStartCb(void *btn)
     // }
 }
 
-static void button_thread_entry(void *param)
+static void button_process(void *param)
 {
+#ifdef BUTTON_USE_THREAD
     while (1)
     {
         //每隔5ms调用一次按键后台处理函数
         button_ticks();
         rt_thread_mdelay(5);
     }
+#else
+    button_ticks();
+#endif // !BUTTON_USE_THREAD
 }
 
 /**
@@ -110,14 +120,28 @@ int BSP_BUTTON_Init(void)
     // 启动按键
     button_start(&button_mute_check);
 
+#ifdef BUTTON_USE_THREAD
     rt_thread_init(&button_thread,
                    "button_thread",
-                   button_thread_entry,
+                   button_process,
                    RT_NULL,
                    &button_thread_stack[0],
                    sizeof(button_thread_stack),
                    BUTTON_THREAD_PRIORITY, BUTTON_THREAD_TIMESLICE);
     rt_thread_startup(&button_thread);
+#else
+    button_timer = rt_timer_create("button_timer", button_process,
+                             RT_NULL, 5,
+                             RT_TIMER_FLAG_PERIODIC);
+    if (button_timer != RT_NULL)
+    {
+        rt_timer_start(button_timer);
+    }
+    else
+    {
+        LOG_E("create button_timer fail");
+    }
+#endif // !BUTTON_USE_THREAD
 
     LOG_I("BSP_BUTTON_Init!");
 }

@@ -38,3 +38,26 @@ void USART1_IRQHandler(void)
 ## 线程优先级
 
 `drv_uart.c`中，串口使用DMA+空闲中断接收数据，在 `uart2_rx_dma_thread_entry` 线程中执行 `_UART2_RxCheck()`，其他想获取数据的线程优先级需**要低于**对应串口接收数据线程的优先级，以保证 `uart2_rx_dma_thread_entry`线程接收完所有数据后，其他线程才能通过获取 `uart2_rx_ok_sem`信号量来做数据处理。
+
+
+
+## button
+
+在`bsp_button.h`中使用宏定义`BUTTON_USE_THREAD`的定义来选择按键的扫描检测使用新建线程还是使用定时器，这里我经过对比还是用了定时器来做的
+
+```c
+// 不然就是用 timer 实现按键扫描处理
+// #define BUTTON_USE_THREAD
+```
+
+### 使用一个线程做按键处理
+
+![image-20230804155446677](image/image-20230804155446677.png)
+
+![image-20230804155457152](image/image-20230804155457152.png)
+
+### 使用一个定时器来做按键处理
+
+![image-20230804155548242](image/image-20230804155548242.png)
+
+![image-20230804155555526](image/image-20230804155555526.png)
