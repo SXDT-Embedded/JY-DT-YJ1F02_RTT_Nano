@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 09:26:40
+ * @LastEditTime : 2023-08-03 17:33:57
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
@@ -376,7 +376,8 @@ static void hr_thread_entry(void *param)
     uint8_t buf[UART2_RX_RB_LENGTH];
     while (1)
     {
-        // rt_sem_take(uart2_rx_ok_sem, RT_WAITING_FOREVER);
+        rt_sem_take(uart2_rx_ok_sem, RT_WAITING_FOREVER);
+        LOG_D("uart2_revok_sem");
 
         if (RT_EOK == rt_event_recv(uart2_event
 						, UART2_EVENT_RX_OK_FLAG
@@ -384,22 +385,21 @@ static void hr_thread_entry(void *param)
 						, RT_WAITING_FOREVER
 						, &uart2_event_recved))
         {
-            if (RT_EOK == rt_event_recv(uart2_event
-						, UART2_EVENT_RX_PE_FLAG
-						, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR
-						, 0
-						, &uart2_event_recved))
-            {
-                LOG_D("UART2_EVENT_RX_PE_FLAG");
-                lwrb_skip(&uart2_rx_rb, lwrb_get_full(&uart2_rx_rb));
-            }
-            else
-            {
-                LOG_D("UART2_EVENT_RX_OK_FLAG");
-                uint8_t buf_len = lwrb_get_full(&uart2_rx_rb);
-                lwrb_read(&uart2_rx_rb, buf, buf_len);
-                // UART2_Write(buf, buf_len);
-                LOG_HEX("u2 buf", 16, buf, buf_len);
+            // 这里有校验错误的话，信号量uart2_rx_parity_err_sem会加好几次
+            // 感觉用事件好点，但是比sem多占用52B
+            while (RT_EOK == rt_sem_trytake(uart2_rx_parity_err_sem));
+
+            LOG_D("uart2_rx_parity_err_sem");
+            lwrb_skip(&uart2_rx_rb, lwrb_get_full(&uart2_rx_rb));
+        }
+        else
+        {
+            LOG_D("uart2_revok_sem");
+
+            uint8_t buf_len = lwrb_get_full(&uart2_rx_rb);
+            lwrb_read(&uart2_rx_rb, buf, buf_len);
+            // UART2_Write(buf, buf_len);
+            LOG_HEX("u2 buf", 16, buf, buf_len);
 
             #if 1
                 if (buf_len >= HOST_FRAME_MIN_LEN)
