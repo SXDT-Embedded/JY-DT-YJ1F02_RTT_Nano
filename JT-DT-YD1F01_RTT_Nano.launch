@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?> 
+<?xml version="1.0" encoding="UTF-8" ?>
 <launchConfiguration type="com.mounriver.debug.gdbjtag.openocd.launchConfigurationType">
   <booleanAttribute key="com.mounriver.debug.gdbjtag.openocd.doContinue" value="true" />
   <booleanAttribute key="com.mounriver.debug.gdbjtag.openocd.doDebugInRam" value="false" />
@@ -46,12 +46,12 @@
   <booleanAttribute key="org.eclipse.cdt.dsf.gdb.UPDATE_THREADLIST_ON_SUSPEND" value="false" />
   <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2" />
   <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value="" />
-  <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="obj\JT-DT-YD1C01_RTT_Nano.elf" />
-  <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="JT-DT-YD1C01_RTT_Nano" />
+  <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="obj\JT-DT-YD1F01_RTT_Nano.elf" />
+  <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="JT-DT-YD1F01_RTT_Nano" />
   <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true" />
   <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="" />
   <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-    <listEntry value="/JT-DT-YD1C01_RTT_Nano" />
+    <listEntry value="/JT-DT-YD1F01_RTT_Nano" />
   </listAttribute>
   <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
     <listEntry value="4" />

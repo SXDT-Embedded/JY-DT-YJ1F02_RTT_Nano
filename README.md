@@ -1,4 +1,4 @@
-# JT-DT-YD1C01_RTT_Nano
+# JT-DT-YD1F01_RTT_Nano
 
 #### 介绍
 
@@ -6,7 +6,7 @@
 
 ## RTT移植注意事项
 
-> 参考WCH官方的文档[RISC-V 平台移植 RTOS](https://gitee.com/SXDT-Embedded/JT-DT-YD1C01_RTT_Nano/blob/main/doc/RTOS%E7%A7%BB%E6%A4%8D%E5%88%B0RISC-V.pdf)
+> 参考WCH官方的文档[RISC-V 平台移植 RTOS](https://gitee.com/SXDT-Embedded/JT-DT-YD1F01_RTT_Nano/blob/main/doc/RTOS%E7%A7%BB%E6%A4%8D%E5%88%B0RISC-V.pdf)
 
 ### 中断
 

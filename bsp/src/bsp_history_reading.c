@@ -2,8 +2,8 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 10:44:56
- * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_history_reading.c
+ * @LastEditTime : 2023-08-04 11:03:14
+ * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
  * Copyright (c) 2023 by yzy, All Rights Reserved.
@@ -90,7 +90,7 @@ TsFrameData* HR_GetFrameData(const uint8_t *p_src, const uint8_t src_len)
             }
         }
     }
-    LOG_D("HR_GetDataFrame Fail!");
+    LOG_E("HR_GetDataFrame Fail!");
 
     return get_buffer;
 }
@@ -394,25 +394,21 @@ static void hr_thread_entry(void *param)
             uint8_t buf_len = lwrb_get_full(&uart2_rx_rb);
             lwrb_read(&uart2_rx_rb, buf, buf_len);
             // UART2_Write(buf, buf_len);
-            LOG_HEX("u2 rx buf", 16, buf, buf_len);
-
         #if 1
             if (buf_len >= HOST_FRAME_MIN_LEN)
             {
                 TsFrameData *HostFrameData = HR_GetFrameData(buf, buf_len);
-
                 if(HostFrameData != RT_NULL)
                 {
-                    // LOG_D("c1: %d, c2: %d, len: %d", HostFrameData->c1, \
-                    //     HostFrameData->c2, HostFrameData->len);
-                    // logHexDumpAll(HostFrameData->data, HostFrameData->len);
+                    LOG_D("HostFrameData != RT_NULL");
+                    LOG_D("HostFrameData->data = %p, len = %d", HostFrameData->data, HostFrameData->len);
+                    LOG_HEX("HostFrameData", 16, HostFrameData->data, HostFrameData->len);
+                    LOG_HEX("HostFrameData All", 16, (uint8_t *)HostFrameData, 20);
 
                     HR_ProcessData(HostFrameData, kFromUart);
                 }
                 rt_free(HostFrameData);
                 HostFrameData = RT_NULL;
-
-                // lwrb_skip(&usart2_rx_rb, buf_len);/* Skip buffer, it has been successfully parse*/
             }
         #endif
         }
