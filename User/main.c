@@ -18,6 +18,7 @@ int main(void)
 
     LOG_I("MCU: CH32V20x");
     LOG_I("SysClk: %dHz",SystemCoreClock);
+	LOG_I("基础款家用可燃气体探测器（甲烷）JT-DT-YD1F01");
 
     /* 初始化 sys 事件对象 */
     sys_event = rt_event_create("sys_event", RT_IPC_FLAG_PRIO);
