@@ -507,17 +507,18 @@ ALIGN(RT_ALIGN_SIZE)
 static char uart3_dma_rx_thread_stack[UART3_DMA_RX_THREAD_STACK_SIZE];
 static struct rt_thread uart3_dma_rx_thread;
 
-rt_sem_t uart1_rx_check_sem = RT_NULL;
-rt_sem_t uart1_rx_ok_sem = RT_NULL;
-rt_sem_t uart1_rx_parity_err_sem = RT_NULL;
+rt_sem_t uart1_rx_check_sem;
+rt_sem_t uart1_rx_ok_sem;
+rt_sem_t uart1_rx_parity_err_sem;
 
-rt_sem_t uart2_rx_check_sem = RT_NULL;
-rt_sem_t uart2_rx_ok_sem = RT_NULL;
-rt_sem_t uart2_rx_parity_err_sem = RT_NULL;
+rt_sem_t uart2_rx_check_sem;
+// rt_sem_t uart2_rx_ok_sem;
+// rt_sem_t uart2_rx_parity_err_sem;
+rt_event_t uart2_event;
 
-rt_sem_t uart3_rx_check_sem = RT_NULL;
-rt_sem_t uart3_rx_ok_sem = RT_NULL;
-rt_sem_t uart3_rx_parity_err_sem = RT_NULL;
+rt_sem_t uart3_rx_check_sem;
+rt_sem_t uart3_rx_ok_sem;
+rt_sem_t uart3_rx_parity_err_sem;
 
 void USART1_IRQHandler(void) __attribute__((interrupt()));
 void USART2_IRQHandler(void) __attribute__((interrupt()));
@@ -1203,27 +1204,23 @@ void UART2_Init(uint32_t baudrate, TeUsartParityMode parity)
 
 static int _UART2_SemCreate(void)
 {
-    uart2_rx_parity_err_sem = rt_sem_create("uart2_rx_parity_err_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart2_rx_parity_err_sem != RT_NULL)
-    {
-        LOG_D("create uart2_rx_parity_err_sem");
-    }
     uart2_rx_check_sem = rt_sem_create("uart2_rx_check_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart2_rx_check_sem != RT_NULL)
+    if (uart2_rx_check_sem == RT_NULL)
     {
-        LOG_D("create uart2_rx_check_sem");
+        LOG_E("create uart2_rx_check_sem fail");
     }
-    uart2_rx_ok_sem = rt_sem_create("uart2_rx_ok_sem", 0, RT_IPC_FLAG_PRIO);
-    if (uart2_rx_ok_sem != RT_NULL)
+
+    uart2_event = rt_event_create("uart2_event", RT_IPC_FLAG_PRIO);
+    if (uart2_event == RT_NULL)
     {
-        LOG_D("create uart2_rx_ok_sem create");
+        LOG_E("create uart2_event fail");
     }
 
     if (rt_thread_init(&uart2_dma_rx_thread, "uart2_dma_rx_thread"
                             , uart2_rx_dma_thread_entry
                             , RT_NULL
                             , &uart2_dma_rx_thread_stack[0]
-                            , UART2_DMA_RX_THREAD_STACK_SIZE
+                            , sizeof(uart2_dma_rx_thread_stack)
                             , UART2_DMA_RX_THREAD_PRIORITY
                             , UART2_DMA_RX_THREAD_TIMESLICE)
             == RT_EOK)
@@ -1610,7 +1607,9 @@ void USART2_IRQHandler(void)
         // uart2_rev_parity_flag = 1;
         // 这里有校验错误的话，信号量uart2_rx_parity_err_sem会加好几次
         // LOG_D("uart2_rx_parity_err_sem");
-        rt_sem_release(uart2_rx_parity_err_sem);
+        // rt_sem_release(uart2_rx_parity_err_sem);
+        rt_event_send(uart2_event, UART2_EVENT_RX_PE_FLAG);
+        // LOG_D("rt_event_send PE");
     }
     if(USART_GetITStatus(USART2, USART_IT_IDLE) != RESET)//接收完数据后进入空闲中断
     {
@@ -1624,7 +1623,8 @@ void USART2_IRQHandler(void)
         // uart2_rev_flag = 1; //检测到空闲状态，置位接收完成位
         // LOG_D("USART2_IRQHandler");
         rt_sem_release(uart2_rx_check_sem);
-        rt_sem_release(uart2_rx_ok_sem);
+        // rt_sem_release(uart2_rx_ok_sem);
+        rt_event_send(uart2_event, UART2_EVENT_RX_OK_FLAG);
     }
     /* Implement other events when needed */
 
