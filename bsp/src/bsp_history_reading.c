@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 10:10:19
+ * @LastEditTime : 2023-08-04 10:44:56
  * @FilePath     : \JT-DT-YD1C01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
@@ -384,7 +384,7 @@ static void hr_thread_entry(void *param)
             // 感觉用事件好点，但是比sem多占用52B
             while (RT_EOK == rt_sem_trytake(uart2_rx_parity_err_sem));
 
-            LOG_D("uart2_rx_parity_err_sem");
+            LOG_E("uart2_rx_parity_err_sem");
             lwrb_skip(&uart2_rx_rb, lwrb_get_full(&uart2_rx_rb));
         }
         else

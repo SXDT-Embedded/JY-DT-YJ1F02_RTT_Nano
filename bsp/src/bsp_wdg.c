@@ -50,7 +50,7 @@ void IWDG_Init(uint16_t prescaler, uint16_t reload)
 	IWDG_ReloadCounter();
 	IWDG_Enable();
 
-    LOG_D("IWDG_Feed_Init");
+    LOG_I("IWDG_Feed_Init");
 }
 
 inline void IWDG_Feed(void)
@@ -160,14 +160,16 @@ int BSP_WDG_Init(void)
 #endif
     // /* 设置空闲线程钩子函数 */
     // return rt_thread_idle_sethook(BSP_WDG_Loop);
-    rt_thread_init(&wdg_thread,
+    if (RT_EOK == rt_thread_init(&wdg_thread,
                    "wdg_thread",
                    wdg_thread_entry,
                    RT_NULL,
                    &wdg_thread_stack[0],
                    sizeof(wdg_thread_stack),
-                   WDG_THREAD_PRIORITY, WDG_THREAD_TIMESLICE);
-    rt_thread_startup(&wdg_thread);
+                   WDG_THREAD_PRIORITY, WDG_THREAD_TIMESLICE))
+    {
+        rt_thread_startup(&wdg_thread);
+    }
 
     return 0;
 }

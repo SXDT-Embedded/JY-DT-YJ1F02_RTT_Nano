@@ -863,7 +863,7 @@ rt_uint32_t UART3_Read(void *buf, rt_uint32_t len)
 
 static void uart1_rx_dma_thread_entry(void* parameter)
 {
-    LOG_D("uart1_rx_dma_thread_entry");
+    // LOG_D("uart1_rx_dma_thread_entry");
 
     while (1)
     {
@@ -874,7 +874,7 @@ static void uart1_rx_dma_thread_entry(void* parameter)
 
 static void uart2_rx_dma_thread_entry(void* parameter)
 {
-    LOG_D("uart2_rx_dma_thread_entry");
+    // LOG_D("uart2_rx_dma_thread_entry");
 
     while (1)
     {
@@ -885,7 +885,7 @@ static void uart2_rx_dma_thread_entry(void* parameter)
 
 static void uart3_rx_dma_thread_entry(void* parameter)
 {
-    LOG_D("uart3_rx_dma_thread_entry");
+    // LOG_D("uart3_rx_dma_thread_entry");
 
     while (1)
     {
