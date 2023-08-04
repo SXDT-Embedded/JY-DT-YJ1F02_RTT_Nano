@@ -51,14 +51,14 @@
 #define RT_USING_USER_MAIN
 // <o>the stack size of main thread<1-4086>
 //  <i>Default: 512
-#define RT_MAIN_THREAD_STACK_SIZE     1280
+#define RT_MAIN_THREAD_STACK_SIZE     1024
 #define RT_MAIN_THREAD_PRIORITY       15
 
 // 钩子函数配置
 // 设置是否使用钩子函数，默认关闭。
 #define RT_USING_HOOK                         // 是否 开启系统钩子功能
 #define RT_USING_IDLE_HOOK                    // 是否 开启空闲线程钩子功能
-#define IDLE_THREAD_STACK_SIZE     512
+#define IDLE_THREAD_STACK_SIZE     384
 
 //内核调试功能配置
 //定义 RT_DEBUG 宏则开启 debug 模式。若开启系统调试，则在实现打印之后可以打印系统 LOG 日志。请在代码开发与调试过程中打开该项，帮助调试定位问题，在代码发布时关闭该项。

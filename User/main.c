@@ -24,7 +24,7 @@ int main(void)
     sys_event = rt_event_create("sys_event", RT_IPC_FLAG_PRIO);
     if (sys_event == RT_NULL)
     {
-        LOG_D("creat sys_event failed");
+        LOG_E("creat sys_event fail");
     }
 
 	while(1)
