@@ -70,11 +70,6 @@ typedef enum
 
 } TeFrameC2;
 
-typedef enum
-{
-    kFromUart = 0,
-    kFromIot,
-} TeDataSources;
 typedef struct __attribute__((packed))
 {
     uint8_t year_h;
@@ -105,7 +100,7 @@ void HR_Loop(void);
 TsFrameData* HR_GetFrameData(const uint8_t *p_src, const uint8_t src_len);
 // FlagStatus HR_ProcessData(const TsFrameData *pHostFrameData);
 // uint8_t HR_ProcessData(const TsFrameData *pHostFrameData);
-uint8_t HR_ProcessData(const TsFrameData *pHostFrameData, TeDataSources from);
+uint8_t HR_ProcessData(const TsFrameData *pHostFrameData);
 
 uint8_t HR_GenerateRawFrame(TsRawFrameData* pRawData
     , uint8_t c1,TeFrameC2 c2, const uint8_t* p_src, uint8_t src_len);

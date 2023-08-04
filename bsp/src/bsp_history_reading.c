@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-02-01 11:59:45
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 11:03:14
+ * @LastEditTime : 2023-08-04 16:42:17
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_history_reading.c
  * @Description  :
  *
@@ -122,7 +122,7 @@ uint8_t HR_GenerateRawFrame(TsRawFrameData* pRawData
     return flag;
 }
 
-uint8_t HR_ProcessData(const TsFrameData *pHostFrameData, TeDataSources from)
+uint8_t HR_ProcessData(const TsFrameData *pHostFrameData)
 {
     TuFlashProductTimeLimitFrame ReadLimitTime;
 
@@ -357,14 +357,7 @@ uint8_t HR_ProcessData(const TsFrameData *pHostFrameData, TeDataSources from)
         TsRawFrameData RawData;
         HR_GenerateRawFrame(&RawData, c1, c2, data_field, data_len);
         // HR_SendSlaveFrame(SlaveFrameData);
-        if (from == kFromUart)
-        {
-            UART2_Write(RawData.buf, RawData.len);
-        }
-        else if (from == kFromIot)
-        {
-            // Air780_Send(RawData.buf, RawData.len);
-        }
+        UART2_Write(RawData.buf, RawData.len);
     }
 
     return flag;
@@ -405,7 +398,7 @@ static void hr_thread_entry(void *param)
                     LOG_HEX("HostFrameData", 16, HostFrameData->data, HostFrameData->len);
                     LOG_HEX("HostFrameData All", 16, (uint8_t *)HostFrameData, 20);
 
-                    HR_ProcessData(HostFrameData, kFromUart);
+                    HR_ProcessData(HostFrameData);
                 }
                 rt_free(HostFrameData);
                 HostFrameData = RT_NULL;

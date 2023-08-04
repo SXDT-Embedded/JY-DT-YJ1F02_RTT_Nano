@@ -33,7 +33,8 @@
         "lwrb.h": "c",
         "bsp_wdg.h": "c",
         "bsp_mq.h": "c",
-        "drv_gpio.h": "c"
+        "drv_gpio.h": "c",
+        "bsp_cpu_usage.h": "c"
     },
     "commentTranslate.hover.enabled": false,
     "commentTranslate.targetLanguage": "zh-CN"

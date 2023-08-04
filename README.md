@@ -42,6 +42,18 @@ void USART1_IRQHandler(void)
 
 
 
+## CPU利用率
+
+> 参考：
+>
+> [【野火】RT-Thread内核实现与应用开发实战--基于STM32-16. CPU 利用率统计](https://doc.embedfire.com/rtos/rtthread/zh/latest/application/cpu_usage_rate.html#cpu)
+>
+> [RT-Thread CPU 利用率统计（学习笔记）](https://blog.csdn.net/weixin_43772810/article/details/125428073)
+>
+> [cpu_usage](https://github.com/enkiller/cpu_usage)
+
+
+
 
 ## 线程优先级
 

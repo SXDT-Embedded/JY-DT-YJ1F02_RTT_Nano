@@ -3,17 +3,18 @@
 
 #include "bsp_cpu_usage.h"
 
-#define LOG_TAG     "bsp_cpu_usage"          // 该模块对应的标签。不定义时，默认：NO_TAG
+#define LOG_TAG     "bsp_cpu_usage" // 该模块对应的标签。不定义时，默认：NO_TAG
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
-#define CPU_USAGE_CALC_TICK 1000
-#define CPU_USAGE_LOOP 100
+// #define CPU_USAGE_CALC_TICK     (1000)
+#define CPU_USAGE_CALC_TICK     RT_TICK_PER_SECOND
+#define CPU_USAGE_LOOP          (100)
 
-static rt_uint8_t cpu_usage_major = 0, cpu_usage_minor = 0;
-static rt_uint32_t total_count = 0;
+static rt_uint8_t cpu_usage_major, cpu_usage_minor;
+static rt_uint32_t total_count;
 
-static void _cpu_usage_idle_hook(void)
+static void _CPU_Usage_IdleHook(void)
 {
     rt_tick_t tick;
     rt_uint32_t count;
@@ -62,7 +63,7 @@ static void _cpu_usage_idle_hook(void)
     }
 }
 
-void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor)
+void CPU_Usage_Get(rt_uint8_t *major, rt_uint8_t *minor)
 {
     RT_ASSERT(major != RT_NULL);
     RT_ASSERT(minor != RT_NULL);
@@ -71,13 +72,13 @@ void cpu_usage_get(rt_uint8_t *major, rt_uint8_t *minor)
     *minor = cpu_usage_minor;
 }
 
-int cpu_usage_init()
+int CPU_Usage_Init(void)
 {
     /* 设置空闲线程钩子函数 */
-    return rt_thread_idle_sethook(_cpu_usage_idle_hook);
+    return rt_thread_idle_sethook(_CPU_Usage_IdleHook);
 }
 #ifdef RT_USING_COMPONENTS_INIT
-INIT_APP_EXPORT(cpu_usage_init);
+INIT_APP_EXPORT(CPU_Usage_Init);
 #endif
 
 //static rt_thread_t get_cpu_use_thread = RT_NULL;
@@ -89,7 +90,7 @@ INIT_APP_EXPORT(cpu_usage_init);
 //    while (1)
 //    {
 //        /* 获取CPU利用率数据 */
-//        cpu_usage_get(&major, &minor);
+//        CPU_Usage_Get(&major, &minor);
 //
 //        /* 打印CPU利用率 */
 //        rt_kprintf("CPU利用率 = %d.%d%%\r\n", major, minor);
@@ -103,7 +104,7 @@ INIT_APP_EXPORT(cpu_usage_init);
 //    rt_kprintf("from: %s -->  to: %s \n", from->name , to->name);
 //}
 
-int usage(void)
+static int usage(void)
 {
     /* 设置调度器钩子 */
 //    rt_scheduler_sethook(hook_of_scheduler);
@@ -124,10 +125,10 @@ int usage(void)
 //        return -1;
     rt_uint8_t major, minor;
     /* 获取CPU利用率数据 */
-    cpu_usage_get(&major, &minor);
+    CPU_Usage_Get(&major, &minor);
 
     /* 打印CPU利用率 */
-    LOG_D("CPU利用率 = %d.%d%%", major, minor);
+    LOG_D("usage = %d.%d%%", major, minor);
 
     return 0;
 }
