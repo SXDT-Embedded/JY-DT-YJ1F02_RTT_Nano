@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-04-04 14:45:50
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-03 17:11:46
+ * @LastEditTime : 2023-08-07 17:03:49
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_led.c
  * @Description  :
  *
@@ -37,13 +37,17 @@ agile_led_t *netled_y = RT_NULL;
 
 int BSP_LED_Init(void)
 {
-    led_r = agile_led_create(LED_R_PIN, PIN_HIGH, "100,200", -1);
-    led_g = agile_led_create(LED_G_PIN, PIN_HIGH, "100,200", -1);
-    led_y = agile_led_create(LED_Y_PIN, PIN_HIGH, "100,200", -1);
+    led_r = agile_led_create(LED_R_PIN, PIN_HIGH, "100,200", 0);
+    led_g = agile_led_create(LED_G_PIN, PIN_HIGH, "100,200", 0);
+    led_y = agile_led_create(LED_Y_PIN, PIN_HIGH, "100,200", 0);
 
-    netled_r = agile_led_create(NETLED_R_PIN, PIN_HIGH, "100,200", -1);
-    netled_g = agile_led_create(NETLED_G_PIN, PIN_HIGH, "200,800", 10);
-    netled_y = agile_led_create(NETLED_Y_PIN, PIN_HIGH, "100,200", 3);
+    netled_r = agile_led_create(NETLED_R_PIN, PIN_HIGH, "100,200", 0);
+    netled_g = agile_led_create(NETLED_G_PIN, PIN_HIGH, "200,800", 0);
+    netled_y = agile_led_create(NETLED_Y_PIN, PIN_HIGH, "100,200", 0);
+
+    agile_led_start(led_r);
+    agile_led_start(led_g);
+    agile_led_start(led_y);
 
     // rt_thread_init(&led_thread,
     //                "led_thread",

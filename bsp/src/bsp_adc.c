@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-01-30 12:50:12
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-03 14:12:03
+ * @LastEditTime : 2023-08-07 11:17:57
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_adc.c
  * @Description  :
  *
@@ -10,15 +10,15 @@
  */
 #include "bsp_adc.h"
 
-#define LOG_TAG     "bsp_adc"          // 该模块对应的标签。不定义时，默认：NO_TAG
+#define LOG_TAG     "bsp_adc"       // 该模块对应的标签。不定义时，默认：NO_TAG
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
 #include <ulog.h>                   // 必须在 LOG_TAG 与 LOG_LVL 下面
 
 //用到了atoi
 #include <stdlib.h>
 
-uint16_t adc_buffer[ADC_BUFFER_SIZE] = {0};
-static int16_t adc_calibrattion = 0;
+uint16_t adc_buffer[ADC_BUFFER_SIZE];
+static int16_t adc_calibrattion;
 
 /**
  * @description: Get Conversion Value.
@@ -40,10 +40,10 @@ static uint16_t _Get_ConversionVal(int16_t val)
  */
 static void _USED_ADC_GPIO_Init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_InitTypeDef GPIO_InitStructure;
 
     // 使能 GPIO 时钟 GPIOA
-    USED_ADC_GPIO_CLK_ENABLE();
+    USED_ADC_GPIO_CLK_ENABLE;
 
     // 配置 IO
     GPIO_InitStructure.GPIO_Pin = EMV_ADC_GPIO_PIN | MQ_ADC_GPIO_PIN | VIN_ADC_GPIO_PIN;
@@ -53,9 +53,9 @@ static void _USED_ADC_GPIO_Init(void)
 
 static void _USED_ADC_DMA_Init(void)
 {
-    DMA_InitTypeDef DMA_InitStructure = {0};
+    DMA_InitTypeDef DMA_InitStructure;
 
-    USED_ADC_DMA_CLK_ENABLE();
+    USED_ADC_DMA_CLK_ENABLE;
 
     DMA_DeInit(USED_ADC_DMA_STREAM);
     DMA_InitStructure.DMA_PeripheralBaseAddr = USED_ADC_DR_ADDRESS;
@@ -74,14 +74,14 @@ static void _USED_ADC_DMA_Init(void)
 
 int BSP_ADC_Init(void)
 {
-    ADC_InitTypeDef ADC_InitStructure = {0};
-    // NVIC_InitTypeDef NVIC_InitStructure = {0};
+    ADC_InitTypeDef ADC_InitStructure;
+    // NVIC_InitTypeDef NVIC_InitStructure;
 
     _USED_ADC_GPIO_Init();
     _USED_ADC_DMA_Init();
 
     // 开启ADC时钟
-    USED_ADC_CLK_ENABLE();
+    USED_ADC_CLK_ENABLE;
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);
 
     ADC_DeInit(USED_ADC);
@@ -157,7 +157,18 @@ float Get_ADC_Voltage(TeAdcIndex index)
 {
     float voltage = Get_ADC_Average(index) * 3.3 / 4096;
 
-    LOG_D("%d", (int)(voltage * 1000));
+    // LOG_D("Get_ADC_Voltage(%d) = %d", index, (int)(voltage * 1000));
+    LOG_D("Get_ADC(%d)_Voltage(V): %d.%d%d%d", index
+                    , (int)voltage, (int)(voltage * 10) % 10, (int)(voltage * 100) % 10, (int)(voltage * 1000) % 10);
+
+    return voltage;
+}
+
+uint16_t Get_ADC_VoltageInt1000x(TeAdcIndex index)
+{
+    uint16_t voltage = (Get_ADC_Average(index) * 3.3 / 4096) * 1000;
+
+    LOG_D("VoltageInt1000x(%d) = %04d", index, voltage);
 
     return voltage;
 }

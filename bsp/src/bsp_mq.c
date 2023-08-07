@@ -2,7 +2,7 @@
  * @Author       : yzy
  * @Date         : 2023-01-30 15:40:07
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 16:23:30
+ * @LastEditTime : 2023-08-07 10:52:38
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_mq.c
  * @Description  :
  *
@@ -10,6 +10,9 @@
  */
 #include "bsp_mq.h"
 #include "bsp_adc.h"
+#include "bsp_flash.h"
+#include "bsp_rtc.h"
+#include "bsp_sys.h"
 
 #define LOG_TAG     "bsp_mq"          // 该模块对应的标签。不定义时，默认：NO_TAG
 #define LOG_LVL     LOG_LVL_DBG     // 该模块对应的日志输出级别。不定义时，默认：调试级别
@@ -24,18 +27,18 @@ static struct rt_thread mq_detection_thread;
 
 TeMq Mq;
 
-// FlagStatus IS_MQ_EndOfLife(void)
-// {
-//     FlagStatus flag = RESET;
+FlagStatus IS_MQ_EndOfLife(void)
+{
+    FlagStatus flag = RESET;
 
-//     if (RTC_GetCounter() >= Mq.expiration_seconds)
-//     {
-//         SysControl.Flag.mq_failure = 1;
-//         flag = SET;
-//     }
+    if (RTC_GetCounter() >= SysCtrl.expiration_seconds)
+    {
+        SysControl.Flag.mq_failure = 1;
+        flag = SET;
+    }
 
-//     return flag;
-// }
+    return flag;
+}
 
 uint16_t Get_MQ_VoltageInt1000x(void)
 {

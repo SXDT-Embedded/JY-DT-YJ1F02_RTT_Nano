@@ -48,6 +48,8 @@
 #define MQ_EVENT_CALIBRATION_FLAG       (1 << 5)
 #define MQ_EVENT_FAULT_FLAG             (1 << 6)
 
+#define MQ_EVENT_TO_BE_CALIB_FLAG       (1 << 7)
+
 extern struct rt_event mq_event;
 
 typedef struct __attribute__((packed))

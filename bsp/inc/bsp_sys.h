@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 15:47:14
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-03 17:19:59
+ * @LastEditTime : 2023-08-07 10:49:14
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\inc\bsp_sys.h
  * @Description  :
  *
@@ -23,21 +23,41 @@
 
 #define MAX_EXPIRATION_DAYS         ((uint16_t)(365 * 5 + 30 * 3))
 
+typedef struct __attribute__((packed))
+{
+    uint16_t preheat_time_s;        // 开机预热时长(S)
+    uint16_t mute_time_s;           // 按键消音时长(S)
 
-// #define MQ_THREAD_STACK_SIZE    (512)
-// #define MQ_THREAD_PRIORITY      9
-// #define MQ_THREAD_TIMESLICE     5
+    /************气体传感器 MQ-4B************************/
+    // uint16_t mq_expiration_days;        // 气体传感器 寿命天数
+    // adc voltage 1000x
+    uint16_t mq_alarm_voltage;          // 气体传感器 报警 电压阈值
+    uint16_t mq_open_circuit_voltage;   // 气体传感器 开路 电压阈值
+    uint16_t mq_short_circuit_voltage;  // 气体传感器 短路 电压阈值
+
+    uint8_t factory_time[6];        // 出厂时间 年-月-日-时-分-秒
+    uint8_t expiration_time[6];     // 到期时间 年-月-日-时-分-秒
+    uint16_t expiration_seconds;    // 到期时间 (s)
+
+} TsSysCtrl;
+extern TsSysCtrl SysCtrl;
 
 /* sys 事件控制块 */
 extern rt_event_t sys_event;
 
-#define EVENT_NORMAL_FLAG            (1 << 0)
-#define EVENT_ALARM_FLAG             (1 << 1)
-#define EVENT_END_OF_LIFE_FLAG       (1 << 2)
-#define EVENT_OPEN_CIRCUIT_FLAG      (1 << 3)
-#define EVENT_SHORT_CIRCUIT_FLAG     (1 << 4)
-#define EVENT_CALIBRATION_FLAG       (1 << 5)
-#define EVENT_FAULT_FLAG             (1 << 6)
+#define EVENT_NORMAL_FLAG               (1 << 0)
+#define EVENT_ALARM_FLAG                (1 << 1)
+#define EVENT_END_OF_LIFE_FLAG          (1 << 2)
+#define EVENT_OPEN_CIRCUIT_FLAG         (1 << 3)
+#define EVENT_SHORT_CIRCUIT_FLAG        (1 << 4)
+#define EVENT_CALIBRATION_FLAG          (1 << 5)
+#define EVENT_FAULT_FLAG                (1 << 6)
+
+#define EVENT_BUTTON_SINGLE_CLICK       (1 << 7)
+#define EVENT_BUTTON_DOUBLE_CLICK       (1 << 8)
+#define EVENT_BUTTON_LONG_CLICK         (1 << 9)
+
+#define EVENT_BUTTON_LONG_CLICK         (1 << 9)
 
 
 typedef enum

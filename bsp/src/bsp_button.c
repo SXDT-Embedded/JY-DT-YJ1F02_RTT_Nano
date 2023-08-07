@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 17:15:25
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-04 16:50:20
+ * @LastEditTime : 2023-08-07 17:03:06
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_button.c
  * @Description  :
  *
@@ -55,6 +55,8 @@ static void _ButtonMuteCheck_SingleClickCb(void *btn)
 {
     LOG_D("ButtonMuteCheck SingleClick!");
 
+    agile_led_toggle(led_r);
+
     // if (SysControl.status == kSysRuningStatus ||
     //     SysControl.status == kSysStartupPreheatingStatus)
     // {
@@ -65,6 +67,8 @@ static void _ButtonMuteCheck_SingleClickCb(void *btn)
 static void _ButtonMuteCheck_DoubleClickCb(void *btn)
 {
     LOG_D("ButtonMuteCheck DoubleClick");
+    agile_led_toggle(led_g);
+
     // Coil_Close();
 }
 
@@ -75,6 +79,7 @@ static void _ButtonMuteCheck_DoubleClickCb(void *btn)
  */
 static void _ButtonMuteCheck_LongStartCb(void *btn)
 {
+    agile_led_toggle(led_y);
     LOG_D("ButtonMuteCheck LongStart");
 
     // if (SysControl.status == kSysAlarmStatus)

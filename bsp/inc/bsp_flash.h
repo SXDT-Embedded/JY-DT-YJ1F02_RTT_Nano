@@ -2,7 +2,7 @@
  * @Author       : stark1898y 1658608470@qq.com
  * @Date         : 2023-08-02 14:10:30
  * @LastEditors  : stark1898y 1658608470@qq.com
- * @LastEditTime : 2023-08-02 14:14:21
+ * @LastEditTime : 2023-08-07 10:31:17
  * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\inc\bsp_flash.h
  * @Description  :
  *
@@ -43,7 +43,6 @@
 // code flash = 64 KB
 #define FALSH_SIZE_KB               (224U)
 #define FLASH_LAST_PAGE_START_ADDR  (FLASH_START_ADDR + (FALSH_SIZE_KB * 1024U) - FLASH_PAGE_SIZE)
-
 
 #define FLASH_HR_ALARM_START_ADDR           (FLASH_HR_ALARM_RCY_START_ADDR - FLASH_PAGE_SIZE * HR_ALARM_PAGES)
 #define FLASH_HR_ALARM_RCY_START_ADDR       (FLASH_HR_FAULT_START_ADDR - FLASH_PAGE_SIZE * HR_ALARM_RCY_PAGES)

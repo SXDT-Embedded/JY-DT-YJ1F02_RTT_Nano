@@ -17,6 +17,7 @@
 //用到了atoi
 #include <stdlib.h>
 
+TsSysCtrl SysCtrl;
 TsSysControl SysControl;
 
 void SYS_SetStatus(TeSysStatus sys_status)
