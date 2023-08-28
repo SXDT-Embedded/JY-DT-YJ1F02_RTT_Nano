@@ -3,7 +3,7 @@
  * @Date         : 2023-07-25 17:08:50
  * @LastEditors  : stark1898y 1658608470@qq.com
  * @LastEditTime : 2023-08-03 17:16:52
- * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\inc\bsp_led.h
+ * @FilePath     : \JT-DT-YD1F02_RTT_Nano\bsp\inc\bsp_led.h
  * @Description  :
  *
  * Copyright (c) 2023 by ${git_name_email}, All Rights Reserved.

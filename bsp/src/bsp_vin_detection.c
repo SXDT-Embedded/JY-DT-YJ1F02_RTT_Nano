@@ -3,7 +3,7 @@
  * @Date         : 2023-08-02 17:51:08
  * @LastEditors  : stark1898y 1658608470@qq.com
  * @LastEditTime : 2023-08-02 17:53:23
- * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\src\bsp_vin_detection.c
+ * @FilePath     : \JT-DT-YD1F02_RTT_Nano\bsp\src\bsp_vin_detection.c
  * @Description  :
  *
  * Copyright (c) 2023 by yzy, All Rights Reserved.

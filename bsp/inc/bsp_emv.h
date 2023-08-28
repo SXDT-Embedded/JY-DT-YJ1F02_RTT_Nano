@@ -3,7 +3,7 @@
  * @Date         : 2023-08-02 15:44:20
  * @LastEditors  : stark1898y 1658608470@qq.com
  * @LastEditTime : 2023-08-02 16:38:02
- * @FilePath     : \JT-DT-YD1F01_RTT_Nano\bsp\inc\bsp_emv.h
+ * @FilePath     : \JT-DT-YD1F02_RTT_Nano\bsp\inc\bsp_emv.h
  * @Description  : 电磁阀 EMV
  *
  * Copyright (c) 2023 by yzy, All Rights Reserved.
