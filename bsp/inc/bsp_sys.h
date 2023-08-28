@@ -3,7 +3,7 @@
  * @Date         : 2023-08-02 15:47:14
  * @LastEditors  : stark1898y 1658608470@qq.com
  * @LastEditTime : 2023-08-07 10:49:14
- * @FilePath     : \JT-DT-YD1F02_RTT_Nano\bsp\inc\bsp_sys.h
+ * @FilePath     : \JY-DT-YJ1F02_RTT_Nano\bsp\inc\bsp_sys.h
  * @Description  :
  *
  * Copyright (c) 2023 by yzy, All Rights Reserved.

@@ -3,7 +3,7 @@
  * @Date         : 2023-07-27 11:54:12
  * @LastEditors  : stark1898y 1658608470@qq.com
  * @LastEditTime : 2023-07-27 11:54:12
- * @FilePath     : \JT-DT-YD1F02_RTT_Nano\rtthread\components\finsh\msh_parse.c
+ * @FilePath     : \JY-DT-YJ1F02_RTT_Nano\rtthread\components\finsh\msh_parse.c
  * @Description  :
  *
  * Copyright (c) 2023 by yzy, All Rights Reserved.

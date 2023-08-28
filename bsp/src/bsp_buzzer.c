@@ -3,7 +3,7 @@
  * @Date         : 2023-07-27 12:56:09
  * @LastEditors  : stark1898y 1658608470@qq.com
  * @LastEditTime : 2023-08-03 14:14:33
- * @FilePath     : \JT-DT-YD1F02_RTT_Nano\bsp\src\bsp_buzzer.c
+ * @FilePath     : \JY-DT-YJ1F02_RTT_Nano\bsp\src\bsp_buzzer.c
  * @Description  :
  *
  * Copyright (c) 2023 by yzy, All Rights Reserved.

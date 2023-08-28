@@ -1,12 +1,12 @@
-# JT-DT-YD1F02_RTT_Nano
+# JY-DT-YJ1F02_RTT_Nano
 
 #### 介绍
 
-圆形-甲烷，基础款家用可燃气体探测器_JT-DT-YD1F02，基于RTT Nano 3.1.5
+圆形-丙烷，基础款家用可燃气体探测器_JY-DT-YJ1F02，基于RTT Nano 3.1.5
 
 ## RTT移植注意事项
 
-> 参考WCH官方的文档[RISC-V 平台移植 RTOS](https://gitee.com/SXDT-Embedded/JT-DT-YD1F02_RTT_Nano/blob/main/doc/RTOS%E7%A7%BB%E6%A4%8D%E5%88%B0RISC-V.pdf)
+> 参考WCH官方的文档[RISC-V 平台移植 RTOS](https://gitee.com/SXDT-Embedded/JY-DT-YJ1F02_RTT_Nano/blob/main/doc/RTOS%E7%A7%BB%E6%A4%8D%E5%88%B0RISC-V.pdf)
 
 ### 中断
 
